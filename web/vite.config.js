@@ -5,7 +5,7 @@ import { svelte } from '@sveltejs/vite-plugin-svelte'
 export default defineConfig({
   plugins: [svelte()],
   server: {
-    allowedHosts: ("karkasai.ciuplinskas.lt"),
+    allowedHosts: ['karkasai.ciuplinskas.lt'],
     proxy: { '/api': 'http://app:8080' }
   }
 })
