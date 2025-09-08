@@ -1,0 +1,36 @@
+.env*
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go build artifacts
+*.test
+*.out
+
+# Build output
+/bin/
+/build/
+/dist/
+/target/
+
+# IDE/editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.DS_Store
+
+# Dependency & module caches (don’t ignore go.mod/go.sum!)
+vendor/
+/*.syso
+
+# Test cache
+*.cover
+*.coverprofile
+
+# Logs
+*.log
