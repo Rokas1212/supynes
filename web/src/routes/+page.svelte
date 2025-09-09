@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Navbar } from '$lib';
+	import { Featured } from '$lib';
 </script>
 
-<Navbar title="Supynės" />
+<Featured />
