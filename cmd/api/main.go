@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/Rokas1212/supynes/internal/database"
+	"github.com/Rokas1212/supynes/internal/handlers"
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,7 +19,7 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Print("Migration Complete")
-	// Read PORT from environment, default to 8080
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -34,12 +35,7 @@ func main() {
 		})
 	})
 
-	router.GET("/migrate", func(c *gin.Context) {
-		if err := database.AutoMigrate(); err != nil {
-			log.Fatal(err)
-		}
-		log.Print("Migration Complete")
-	})
+	router.POST("/api/login", handlers.Login)
 
 	log.Printf("Server running on http://localhost:%s", port)
 	if err := router.Run(":" + port); err != nil {
