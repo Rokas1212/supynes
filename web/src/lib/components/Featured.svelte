@@ -72,8 +72,8 @@
 <section class="px-4 py-16">
 	<div class="mx-auto max-w-7xl">
 		<div class="mb-12 text-center">
-			<h2 class="text-foreground mb-4 text-3xl font-bold">Featured Swings</h2>
-			<p class="text-muted-foreground mx-auto max-w-2xl text-lg">Super Swings !</p>
+			<h2 class="mb-4 text-3xl font-bold">Featured Swings</h2>
+			<p class="mx-auto max-w-2xl text-lg">Super Swings !</p>
 		</div>
 
 		<div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
