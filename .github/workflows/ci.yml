@@ -1,0 +1,15 @@
+name: Pull updates to prod
+
+on: [push]
+
+jobs:
+  pull-and-deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Pull
+        run: git pull
+        working-directory: /home/rokas/repos/supynes
+      - name: Rebuild
+        run: docker compose up -d --build
+        working-directory: /home/rokas/repos/supynes
