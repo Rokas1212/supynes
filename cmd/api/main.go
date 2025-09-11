@@ -22,20 +22,26 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "8085"
 	}
 
 	// Create Gin router
 	router := gin.Default()
 
-	// Simple GET endpoint
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "Hello, World! 🚀",
-		})
+	router.Use(func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, Authorization")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
 	})
 
-	router.POST("/api/login", handlers.Login)
+	router.POST("/login", handlers.Login)
 
 	log.Printf("Server running on http://localhost:%s", port)
 	if err := router.Run(":" + port); err != nil {

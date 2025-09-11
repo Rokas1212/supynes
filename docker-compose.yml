@@ -1,4 +1,15 @@
 services:
+  nginx:
+    image: nginx:alpine
+    ports: 
+      - 5173:80
+    volumes:
+      - ./nginx/:/usr/share/nginx/html
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+    depends_on:
+      - web
+      - app
+
   db:
     image: postgres:16-alpine
     container_name: supynes-db
@@ -18,9 +29,7 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://postgres:postgres@db:5432/supynes?sslmode=disable
-      PORT: 8080
-    ports:
-      - "8080:8080"
+      PORT: 8085
     depends_on:
       - db
 
@@ -30,8 +39,6 @@ services:
     command: sh -c "npm i && npm run dev -- --host"
     volumes:
       - ./web:/web
-    ports:
-      - "5173:5173"
     depends_on: [ app ]
 
 volumes:
