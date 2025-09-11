@@ -24,10 +24,10 @@
 	</div>
 	<div class="p-3">
 		<div class="mb-2 flex justify-between">
-			<h3 class="text-foreground line-clamp-1 text-lg font-semibold">{name}</h3>
+			<h3 class="line-clamp-1 text-lg font-semibold">{name}</h3>
 			<div class="flex items-center gap-1 px-2 py-1">
 				<Star class="h-4 w-4" />
-				<span class="text-foreground text-sm font-medium">{rating}</span>
+				<span class="text-sm font-medium">{rating}</span>
 			</div>
 		</div>
 
