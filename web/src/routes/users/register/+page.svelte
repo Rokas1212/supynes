@@ -1,34 +1,33 @@
-<script>
+<script lang="ts">
 	let email = '';
 	let password = '';
+	let displayName = '';
 	let err = '';
 
-	async function handleSubmit(e) {
+	async function handleSubmit(e: Event) {
 		e.preventDefault();
 		err = '';
 
 		try {
-			const resp = await fetch('/api/login', {
+			const resp = await fetch('/api/register', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({ email: email, password: password })
+				body: JSON.stringify({ email: email, password: password, displayName: displayName })
 			});
 
 			if (resp.ok) {
 				const data = await resp.json();
-				console.log('Login successful', data);
-
-				localStorage.setItem('token', data.token);
+				console.log('Registration successful', data);
 
 				window.location.href = '/';
 			} else {
 				const data = await resp.json();
-				err = data.error || 'login failed';
+				err = data.error || 'registration failed';
 			}
 		} catch (error) {
-			console.error('Failed to login:', error);
+			console.error('Failed to register:', error);
 			err = 'Error, plz try again!';
 		}
 	}
@@ -51,6 +50,18 @@
 			</div>
 
 			<div>
+				<label for="displayName" class="block text-sm font-medium text-gray-900">Username</label>
+				<input
+					id="displayName"
+					name="displayName"
+					type="text"
+					required
+					bind:value={displayName}
+					class="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500"
+				/>
+			</div>
+
+			<div>
 				<label for="password" class="block text-sm font-medium text-gray-900">Password</label>
 				<input
 					id="password"
@@ -67,7 +78,7 @@
 				type="submit"
 				class="w-full cursor-pointer rounded-md bg-blue-600 px-4 py-2 font-semibold text-white"
 			>
-				Log in
+				Register
 			</button>
 		</form>
 	</div>

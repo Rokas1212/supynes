@@ -48,6 +48,9 @@ func main() {
 	router.POST("/playground", func(c *gin.Context) {
 		handlers.AddPlayground(c, database.DB)
 	})
+	router.POST("/register", func(c *gin.Context) {
+		handlers.Register(c, database.DB)
+	})
 
 	log.Printf("Server running on http://localhost:%s", port)
 	if err := router.Run(":" + port); err != nil {
