@@ -3,7 +3,7 @@
 	export let title: string = 'Supynes';
 	export let navLinks: Array<{ href: string; label: string }> = [
 		{ href: '/swings', label: 'Swings' },
-		{ href: '/playgrounds', label: 'Playgrounds' },
+		{ href: '/swings', label: 'Swings' },
 		{ href: '/about', label: 'About' }
 	];
 	export let showLogin: boolean = true;
@@ -49,7 +49,7 @@
 			<div class="flex items-center">
 				{#if showLogin}
 					<a
-						href="/login"
+						href="/users/login"
 						class="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
 					>
 						Log in

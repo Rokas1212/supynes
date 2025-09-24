@@ -21,6 +21,8 @@
 				console.log('Login successful', data);
 
 				localStorage.setItem('token', data.token);
+				localStorage.setItem('userID', data.user.userID.toString());
+				localStorage.setItem('displayName', data.user.displayName.toString());
 
 				window.location.href = '/';
 			} else {

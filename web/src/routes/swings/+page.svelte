@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
-	type Playground = {
+	type Swing = {
 		ID: number;
 		Name: string;
 		Address: string;
@@ -9,18 +9,18 @@
 		Lat: Float64Array;
 		Lng: Float64Array;
 	};
-	let playgrounds: Playground[] = [];
+	let swings: Swing[] = [];
 
 	onMount(async () => {
 		try {
-			const resp = await fetch('/api/playgrounds', {
+			const resp = await fetch('/api/swings', {
 				method: 'GET'
 			});
 
 			if (resp.ok) {
 				const data = await resp.json();
-				playgrounds = data;
-				console.log('Playgrounds', data);
+				swings = data;
+				console.log('Swings', data);
 			}
 		} catch (error) {
 			console.error('Failed to fetch:', error);
@@ -31,7 +31,7 @@
 <section class="px-4 py-16">
 	<div class="mx-auto max-w-7xl">
 		<div class="mb-12 text-center">
-			<h2 class="mb-4 text-3xl font-bold">Bum Playgrounds</h2>
+			<h2 class="mb-4 text-3xl font-bold">Bum Swings</h2>
 			<p class="mx-auto max-w-2xl text-lg">Super Grounds!</p>
 		</div>
 
@@ -47,13 +47,13 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each playgrounds as playground}
+					{#each swings as swing}
 						<tr class="border-t border-black font-medium dark:text-black">
-							<td class="px-6 py-4">{playground.ID}</td>
-							<td class="px-6 py-4">{playground.Name}</td>
-							<td class="px-6 py-4">{playground.Address}</td>
-							<td class="px-6 py-4">{playground.City}</td>
-							<td class="px-6 py-4">{playground.Lat}, {playground.Lng}</td>
+							<td class="px-6 py-4">{swing.ID}</td>
+							<td class="px-6 py-4">{swing.Name}</td>
+							<td class="px-6 py-4">{swing.Address}</td>
+							<td class="px-6 py-4">{swing.City}</td>
+							<td class="px-6 py-4">{swing.Lat}, {swing.Lng}</td>
 						</tr>
 					{/each}
 				</tbody>

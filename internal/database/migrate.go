@@ -7,7 +7,7 @@ import (
 func AutoMigrate() error {
 	if err := DB.AutoMigrate(
 		&models.User{},
-		&models.Playground{},
+		&models.Swing{},
 		&models.Swing{},
 		&models.Review{},
 		&models.Photo{},

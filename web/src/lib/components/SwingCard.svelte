@@ -3,7 +3,7 @@
 
 	export let id;
 	export let name;
-	export let playground;
+	export let swing;
 	export let location;
 	export let rating;
 	export let reviewCount;
@@ -18,7 +18,7 @@
 	<div class="aspect-[4/3] overflow-hidden">
 		<img
 			src={image}
-			alt={`${name} at ${playground}. location: ${location}, id: ${id}`}
+			alt={`${name} at ${swing}. location: ${location}, id: ${id}`}
 			class="h-full w-full object-cover duration-300 group-hover:scale-105"
 		/>
 	</div>
@@ -34,7 +34,7 @@
 		<div class="mb-3 space-y-2">
 			<div class="flex items-center gap-1">
 				<MapPin class="h-4 w-4" />
-				<span class="text-sm">{playground}</span>
+				<span class="text-sm">{swing}</span>
 			</div>
 			<div class="flex items-center gap-1">
 				<Users class="h-4 w-4" />

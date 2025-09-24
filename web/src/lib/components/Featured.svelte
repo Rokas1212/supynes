@@ -5,7 +5,7 @@
 		{
 			id: '1',
 			name: 'Quadro Swings',
-			playground: 'Sunny Meadows Park',
+			swing: 'Sunny Meadows Park',
 			location: 'Downtown District',
 			rating: 4.8,
 			reviewCount: 24,
@@ -16,7 +16,7 @@
 		{
 			id: '2',
 			name: 'Adventure Tire Swing',
-			playground: 'Riverside Recreation Center',
+			swing: 'Riverside Recreation Center',
 			location: 'Westside',
 			rating: 4.6,
 			reviewCount: 18,
@@ -27,7 +27,7 @@
 		{
 			id: '3',
 			name: 'Baby Bucket Swings',
-			playground: 'Little Tots Playground',
+			swing: 'Little Tots Swing',
 			location: 'Northside',
 			rating: 4.9,
 			reviewCount: 32,
@@ -38,18 +38,18 @@
 		{
 			id: '4',
 			name: 'Double Swing Set',
-			playground: 'Central Community Park',
+			swing: 'Central Community Park',
 			location: 'City Center',
 			rating: 4.5,
 			reviewCount: 15,
 			image:
-				'https://www.sodexsport.com/sodex_sport_library/Product-photos/EN/equipment/playground/bragmaia-vietnam-playground-double-swings-set-zea.jpg',
+				'https://www.sodexsport.com/sodex_sport_library/Product-photos/EN/equipment/swing/bragmaia-vietnam-swing-double-swings-set-zea.jpg',
 			tags: ['Social', 'Well-maintained', 'Popular']
 		},
 		{
 			id: '5',
 			name: 'Handicap Accessible Swing',
-			playground: 'Inclusive Play Space',
+			swing: 'Inclusive Play Space',
 			location: 'East District',
 			rating: 5.0,
 			reviewCount: 28,
@@ -59,7 +59,7 @@
 		{
 			id: '6',
 			name: 'Wooden Swing Set',
-			playground: 'Heritage Park',
+			swing: 'Heritage Park',
 			location: 'Historic District',
 			rating: 4.4,
 			reviewCount: 21,

@@ -18,6 +18,7 @@ type LoginRequest struct {
 type LoginResponse struct {
 	Token string `json:"token"`
 	User  struct {
+		UserID      uint   `json:"userID"`
 		Email       string `json:"email"`
 		DisplayName string `json:"displayName"`
 	} `json:"user"`
@@ -57,23 +58,36 @@ func Register(c *gin.Context, db *gorm.DB) {
 	})
 }
 
-func Login(c *gin.Context) {
-	var req LoginRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+func Login(c *gin.Context, db *gorm.DB) {
+	var reqUser LoginRequest
+	if err := c.ShouldBindJSON(&reqUser); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
 
-	// TODO: ADD VALIDATION (anything is allowed in for now)
+	var dbUser models.User
+	result := db.First(&dbUser, "email = ?", reqUser.Email)
+	if result.Error != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		return
+	}
+
+	if dbUser.Password != reqUser.Password {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Wrong email or password!"})
+		return
+	}
+	// TODO: Implement JWT
 
 	resp := LoginResponse{
 		Token: "dummy-wummy",
 		User: struct {
+			UserID      uint   `json:"userID"`
 			Email       string `json:"email"`
 			DisplayName string `json:"displayName"`
 		}{
-			Email:       req.Email,
-			DisplayName: "User",
+			UserID:      dbUser.ID,
+			Email:       dbUser.Email,
+			DisplayName: dbUser.DisplayName,
 		},
 	}
 	c.JSON(http.StatusOK, resp)

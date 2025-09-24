@@ -41,12 +41,14 @@ func main() {
 		c.Next()
 	})
 
-	router.POST("/login", handlers.Login)
-	router.GET("/playgrounds", func(c *gin.Context) {
-		handlers.GetAllPlaygrounds(c, database.DB)
+	router.POST("/login", func(c *gin.Context) {
+		handlers.Login(c, database.DB)
 	})
-	router.POST("/playground", func(c *gin.Context) {
-		handlers.AddPlayground(c, database.DB)
+	router.GET("/swings", func(c *gin.Context) {
+		handlers.GetAllSwings(c, database.DB)
+	})
+	router.POST("/swing", func(c *gin.Context) {
+		handlers.AddSwing(c, database.DB)
 	})
 	router.POST("/register", func(c *gin.Context) {
 		handlers.Register(c, database.DB)
