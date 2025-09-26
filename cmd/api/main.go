@@ -10,7 +10,6 @@ import (
 )
 
 func main() {
-
 	if err := database.Connect(); err != nil {
 		log.Fatal(err)
 	}
@@ -52,6 +51,12 @@ func main() {
 	})
 	router.POST("/register", func(c *gin.Context) {
 		handlers.Register(c, database.DB)
+	})
+	router.POST("/favorite", func(c *gin.Context) {
+		handlers.AddFavorite(c, database.DB)
+	})
+	router.GET("/favorites", func(c *gin.Context) {
+		handlers.GetFavorites(c, database.DB)
 	})
 
 	log.Printf("Server running on http://localhost:%s", port)

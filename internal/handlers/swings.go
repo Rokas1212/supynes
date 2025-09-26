@@ -21,6 +21,7 @@ type SwingAddRequest struct {
 	Lng          *float64
 	City         string
 	CreatedAt    time.Time
+	Tags         []string
 }
 
 func AddSwing(c *gin.Context, db *gorm.DB) {
@@ -46,6 +47,48 @@ func AddSwing(c *gin.Context, db *gorm.DB) {
 	result := db.Create(&swing)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create swing"})
+		return
+	}
+
+	if len(req.Tags) > 0 {
+		var failedTags []string
+
+		for _, tag := range req.Tags {
+
+			tagErr := addTag(tag, db)
+			if tagErr != nil {
+				failedTags = append(failedTags, tag)
+				continue
+			}
+
+			tagID, err := findTag(tag, db)
+			if err != nil || tagID == nil {
+				failedTags = append(failedTags, tag)
+				continue
+			}
+
+			swingTag := models.SwingTag{
+				SwingID:   swing.ID,
+				TagID:     *tagID,
+				CreatedAt: time.Now(),
+			}
+
+			if err := db.Create(&swingTag).Error; err != nil {
+				failedTags = append(failedTags, tag)
+			}
+		}
+
+		// Return success with optional warning about failed tags
+		response := gin.H{
+			"message": "Swing created successfully",
+			"id":      swing.ID,
+		}
+
+		if len(failedTags) > 0 {
+			response["warning"] = fmt.Sprintf("Some tags couldn't be associated: %v", failedTags)
+		}
+
+		c.JSON(http.StatusCreated, response)
 		return
 	}
 

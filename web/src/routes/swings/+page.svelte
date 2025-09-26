@@ -10,6 +10,7 @@
 		Lng: Float64Array;
 	};
 	let swings: Swing[] = [];
+	let favorites: number[] = [];
 
 	onMount(async () => {
 		try {
@@ -25,7 +26,65 @@
 		} catch (error) {
 			console.error('Failed to fetch:', error);
 		}
+
+		getFavorites();
 	});
+
+	async function getFavorites() {
+		let userID = localStorage.getItem('userID');
+
+		if (!userID) {
+			alert('login first');
+			return;
+		}
+
+		try {
+			const resp = await fetch(`/api/favorites?userID=${userID}`, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			});
+
+			if (resp.ok) {
+				const data = await resp.json();
+
+				favorites = data.swings;
+			}
+		} catch (error) {
+			console.error('Failed to fetch favorites:', error);
+		}
+	}
+
+	async function handleFavorite(id: number) {
+		let userID = localStorage.getItem('userID');
+
+		if (!userID) {
+			alert('login first');
+			return;
+		}
+
+		try {
+			const resp = await fetch('/api/favorite', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					UserID: parseInt(userID),
+					SwingID: id
+				})
+			});
+
+			if (resp.ok) {
+				getFavorites();
+			} else {
+				alert('ups');
+			}
+		} catch (error) {
+			console.error('Failed to add favorite:', error);
+		}
+	}
 </script>
 
 <section class="px-4 py-16">
@@ -44,6 +103,7 @@
 						<th scope="col" class="px-6 py-3"> Address </th>
 						<th scope="col" class="px-6 py-3"> City </th>
 						<th scope="col" class="px-6 py-3"> Coordinates </th>
+						<th scope="col" class="px-6 py-3"> Add to favorite </th>
 					</tr>
 				</thead>
 				<tbody>
@@ -54,6 +114,9 @@
 							<td class="px-6 py-4">{swing.Address}</td>
 							<td class="px-6 py-4">{swing.City}</td>
 							<td class="px-6 py-4">{swing.Lat}, {swing.Lng}</td>
+							<td on:click={() => handleFavorite(swing.ID)} class="px-6 py-4 text-center">
+								{#if favorites.includes(swing.ID)}★{:else}☆{/if}
+							</td>
 						</tr>
 					{/each}
 				</tbody>
