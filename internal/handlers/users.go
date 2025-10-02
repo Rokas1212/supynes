@@ -24,6 +24,10 @@ type LoginResponse struct {
 	} `json:"user"`
 }
 
+type DeleteRequest struct {
+	UserID uint `json:"userID"`
+}
+
 type RegisterRequest struct {
 	Email       string `json:"email" binding:"required,email"`
 	Password    string `json:"password" binding:"required"`
@@ -91,4 +95,31 @@ func Login(c *gin.Context, db *gorm.DB) {
 		},
 	}
 	c.JSON(http.StatusOK, resp)
+}
+
+func DeleteUser(c *gin.Context, db *gorm.DB) {
+	var reqDelUser DeleteRequest
+	if err := c.ShouldBindJSON(&reqDelUser); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	// TODO: ADD Validation for who is deleting the user
+	var dbUser models.User
+	result := db.First(&dbUser, "id = ?", reqDelUser.UserID)
+	if result.Error != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid input when deleting user"})
+		return
+	}
+
+	result = db.Delete(&dbUser)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
+		return
+	}
+
+	c.JSON(http.StatusNoContent, gin.H{
+		"message":     fmt.Sprintf("User with id=%d, succesfully delete", dbUser.ID),
+		"displayName": dbUser.DisplayName,
+	})
 }

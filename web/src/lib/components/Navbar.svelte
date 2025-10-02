@@ -1,8 +1,9 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+
 	// Navbar props
 	export let title: string = 'Supynes';
 	export let navLinks: Array<{ href: string; label: string }> = [
-		{ href: '/swings', label: 'Swings' },
 		{ href: '/swings', label: 'Swings' },
 		{ href: '/about', label: 'About' }
 	];
@@ -18,6 +19,51 @@
 	$: isActive = (path: string) => currentPath === path;
 
 	let isOpen: boolean = false;
+
+	onMount(async () => {
+		if (localStorage.getItem('token')) {
+			showLogin = false;
+		}
+	});
+
+	async function handleUserDelete() {
+		const userID = localStorage.getItem('userID');
+		const token = localStorage.getItem('token');
+		if (!userID || !token) {
+			alert('You must be logged in to delete your user.');
+			return;
+		}
+		if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+			return;
+		}
+		try {
+			const resp = await fetch('/api/users/delete', {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json',
+					//TODO: ADD ACTUAL TOKEN eh
+					Authorization: `Bearer ${token}`
+				},
+				body: JSON.stringify({ userID: parseInt(userID) })
+			});
+			if (resp.ok) {
+				localStorage.removeItem('userID');
+				localStorage.removeItem('token');
+				alert('Your account has been deleted.');
+				window.location.href = '/';
+			} else {
+				const data = await resp.json();
+				alert(data.error || 'Failed to delete user.');
+			}
+		} catch (error) {
+			alert('Network error. Please try again.');
+		}
+	}
+
+	async function logout() {
+		localStorage.clear();
+		window.location.href = '/';
+	}
 </script>
 
 <nav class="border-b bg-white shadow-sm">
@@ -54,6 +100,20 @@
 					>
 						Log in
 					</a>
+				{:else}
+					<button
+						on:click={() => logout()}
+						class="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+					>
+						Log out
+					</button>
+					<button
+						type="button"
+						on:click={() => handleUserDelete()}
+						class="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+					>
+						Delete My User
+					</button>
 				{/if}
 
 				<!-- Mobile menu button -->

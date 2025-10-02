@@ -34,7 +34,6 @@
 		let userID = localStorage.getItem('userID');
 
 		if (!userID) {
-			alert('login first');
 			return;
 		}
 
@@ -60,7 +59,7 @@
 		let userID = localStorage.getItem('userID');
 
 		if (!userID) {
-			alert('login first');
+			window.location.href = '/users/login';
 			return;
 		}
 

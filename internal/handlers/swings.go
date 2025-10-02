@@ -100,7 +100,7 @@ func AddSwing(c *gin.Context, db *gorm.DB) {
 
 func GetAllSwings(c *gin.Context, db *gorm.DB) {
 	var swings []models.Swing
-	result := db.Find(&swings)
+	result := db.Preload("Tags").Find(&swings)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch swings"})
 		return

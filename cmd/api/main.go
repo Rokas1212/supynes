@@ -43,6 +43,9 @@ func main() {
 	router.POST("/login", func(c *gin.Context) {
 		handlers.Login(c, database.DB)
 	})
+	router.DELETE("/users/delete", func(c *gin.Context) {
+		handlers.DeleteUser(c, database.DB)
+	})
 	router.GET("/swings", func(c *gin.Context) {
 		handlers.GetAllSwings(c, database.DB)
 	})
