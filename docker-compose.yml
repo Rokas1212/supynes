@@ -15,9 +15,9 @@ services:
     container_name: supynes-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: supynes
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-supynes}
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
@@ -28,8 +28,9 @@ services:
     container_name: supynes-api
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgres://postgres:postgres@db:5432/supynes?sslmode=disable
-      PORT: 8085
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@db:5432/supynes?sslmode=disable}
+      PORT: ${PORT:-8085}
+      JWT_SECRET: ${JWT_SECRET:-supsersruipr421421!surusp_rjsdrjds}
     depends_on:
       - db
 

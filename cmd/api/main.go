@@ -6,6 +6,7 @@ import (
 
 	"github.com/Rokas1212/supynes/internal/database"
 	"github.com/Rokas1212/supynes/internal/handlers"
+	"github.com/Rokas1212/supynes/internal/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -43,9 +44,6 @@ func main() {
 	router.POST("/login", func(c *gin.Context) {
 		handlers.Login(c, database.DB)
 	})
-	router.DELETE("/users/delete", func(c *gin.Context) {
-		handlers.DeleteUser(c, database.DB)
-	})
 	router.GET("/swings", func(c *gin.Context) {
 		handlers.GetAllSwings(c, database.DB)
 	})
@@ -61,6 +59,14 @@ func main() {
 	router.GET("/favorites", func(c *gin.Context) {
 		handlers.GetFavorites(c, database.DB)
 	})
+
+	protected := router.Group("/auth")
+	protected.Use(middleware.AuthMiddleware())
+	{
+		protected.DELETE("/users/delete", func(c *gin.Context) {
+			handlers.DeleteUser(c, database.DB)
+		})
+	}
 
 	log.Printf("Server running on http://localhost:%s", port)
 	if err := router.Run(":" + port); err != nil {

@@ -5,8 +5,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Rokas1212/supynes/internal/auth"
 	"github.com/Rokas1212/supynes/internal/models"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -15,23 +17,24 @@ type LoginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
-type LoginResponse struct {
-	Token string `json:"token"`
-	User  struct {
-		UserID      uint   `json:"userID"`
-		Email       string `json:"email"`
-		DisplayName string `json:"displayName"`
-	} `json:"user"`
-}
-
-type DeleteRequest struct {
-	UserID uint `json:"userID"`
-}
-
 type RegisterRequest struct {
 	Email       string `json:"email" binding:"required,email"`
 	Password    string `json:"password" binding:"required"`
 	DisplayName string `json:"displayName"`
+}
+
+type ProfileRequest struct {
+	UserID uint `json:"userID"`
+}
+
+type ProfileResponse struct {
+	UserID      uint           `json:"userID"`
+	Email       string         `json:"email"`
+	DisplayName string         `json:"displayName"`
+	IsAdmin     bool           `json:"isAdmin"`
+	IsModerator bool           `json:"isModerator"`
+	CreatedAt   time.Time      `json:"createdAt"`
+	Swings      []models.Swing `json:"swings,omitempty"`
 }
 
 func Register(c *gin.Context, db *gorm.DB) {
@@ -41,13 +44,19 @@ func Register(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
+	// Encrypt Password
+	encryptedPassword, err := hashPassword(req.Password)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to encrypt password"})
+		return
+	}
+
 	user := models.User{
 		Email:       req.Email,
 		DisplayName: req.DisplayName,
-		Password:    req.Password, // TODO: ENCRYPT
+		Password:    encryptedPassword,
 		CreatedAt:   time.Now(),
-		IsAdmin:     false,
-		IsModerator: false,
+		Role:        models.RoleUser,
 	}
 
 	result := db.Create(&user)
@@ -76,37 +85,29 @@ func Login(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	if dbUser.Password != reqUser.Password {
+	if !verifyHash(reqUser.Password, dbUser.Password) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Wrong email or password!"})
 		return
 	}
-	// TODO: Implement JWT
 
-	resp := LoginResponse{
-		Token: "dummy-wummy",
-		User: struct {
-			UserID      uint   `json:"userID"`
-			Email       string `json:"email"`
-			DisplayName string `json:"displayName"`
-		}{
-			UserID:      dbUser.ID,
-			Email:       dbUser.Email,
-			DisplayName: dbUser.DisplayName,
-		},
-	}
-	c.JSON(http.StatusOK, resp)
-}
-
-func DeleteUser(c *gin.Context, db *gorm.DB) {
-	var reqDelUser DeleteRequest
-	if err := c.ShouldBindJSON(&reqDelUser); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+	token, err := auth.GenerateToken(dbUser.ID, dbUser.Email, dbUser.DisplayName, dbUser.Role)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate jwt token"})
 		return
 	}
 
-	// TODO: ADD Validation for who is deleting the user
+	c.JSON(http.StatusOK, gin.H{"token": token})
+}
+
+func DeleteUser(c *gin.Context, db *gorm.DB) {
+	userIDFromToken, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
 	var dbUser models.User
-	result := db.First(&dbUser, "id = ?", reqDelUser.UserID)
+	result := db.First(&dbUser, "id = ?", userIDFromToken)
 	if result.Error != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid input when deleting user"})
 		return
@@ -122,4 +123,14 @@ func DeleteUser(c *gin.Context, db *gorm.DB) {
 		"message":     fmt.Sprintf("User with id=%d, succesfully delete", dbUser.ID),
 		"displayName": dbUser.DisplayName,
 	})
+}
+
+func hashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
+}
+
+func verifyHash(password string, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }

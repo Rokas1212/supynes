@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { getUserIdFromToken } from '$lib/utils/jwt';
 
 	// Navbar props
 	export let title: string = 'Supynes';
@@ -27,9 +28,8 @@
 	});
 
 	async function handleUserDelete() {
-		const userID = localStorage.getItem('userID');
 		const token = localStorage.getItem('token');
-		if (!userID || !token) {
+		if (!token) {
 			alert('You must be logged in to delete your user.');
 			return;
 		}
@@ -37,23 +37,27 @@
 			return;
 		}
 		try {
-			const resp = await fetch('/api/users/delete', {
+			const userID = getUserIdFromToken(token);
+			if (!userID) {
+				alert('Invalid token. Please log in again.');
+				return;
+			}
+			const resp = await fetch('/api/auth/users/delete', {
 				method: 'DELETE',
 				headers: {
 					'Content-Type': 'application/json',
-					//TODO: ADD ACTUAL TOKEN eh
 					Authorization: `Bearer ${token}`
-				},
-				body: JSON.stringify({ userID: parseInt(userID) })
+				}
 			});
 			if (resp.ok) {
-				localStorage.removeItem('userID');
 				localStorage.removeItem('token');
 				alert('Your account has been deleted.');
 				window.location.href = '/';
 			} else {
 				const data = await resp.json();
 				alert(data.error || 'Failed to delete user.');
+				localStorage.removeItem('token');
+				window.location.href = '/users/login';
 			}
 		} catch (error) {
 			alert('Network error. Please try again.');

@@ -5,6 +5,7 @@ on: [push]
 jobs:
   pull-and-deploy:
     runs-on: self-hosted
+    environment: supynes
 
     steps:
       - name: Pull
@@ -13,3 +14,10 @@ jobs:
       - name: Rebuild
         run: sudo docker compose up -d --build
         working-directory: /home/rokas/repos/supynes
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          PORT: ${{ secrets.PORT }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}

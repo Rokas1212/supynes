@@ -1,0 +1,18 @@
+th {
+    color: rgb(60, 36, 4)
+}
+
+button.add {
+    background: purple;
+}
+
+button.add:hover {
+    background: rgba(128, 0, 128, 0.689);
+    cursor: pointer;
+}
+
+.tags{
+    background-color: rgba(168, 18, 18, 0.474);
+    color: black;
+}
+

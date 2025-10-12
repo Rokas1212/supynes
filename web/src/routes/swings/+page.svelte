@@ -4,6 +4,7 @@
 	type Swing = {
 		ID: number;
 		Name: string;
+		Description: string;
 		Address: string;
 		City: string;
 		Lat: Float64Array;
@@ -102,6 +103,7 @@
 						<th scope="col" class="px-6 py-3"> Address </th>
 						<th scope="col" class="px-6 py-3"> City </th>
 						<th scope="col" class="px-6 py-3"> Coordinates </th>
+						<th scope="col" class="px-6 py-3"> Description </th>
 						<th scope="col" class="px-6 py-3"> Add to favorite </th>
 					</tr>
 				</thead>
@@ -113,6 +115,7 @@
 							<td class="px-6 py-4">{swing.Address}</td>
 							<td class="px-6 py-4">{swing.City}</td>
 							<td class="px-6 py-4">{swing.Lat}, {swing.Lng}</td>
+							<td class="px-6 py-4">{swing.Description}</td>
 							<td on:click={() => handleFavorite(swing.ID)} class="px-6 py-4 text-center">
 								{#if favorites.includes(swing.ID)}★{:else}☆{/if}
 							</td>
@@ -123,3 +126,7 @@
 		</div>
 	</div>
 </section>
+
+<style>
+	@import './styles.css';
+</style>

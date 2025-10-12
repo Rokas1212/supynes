@@ -183,7 +183,7 @@
 		{#if tags.length > 0}
 			<div class="mt-2 text-sm text-black">
 				{#each tags as tag}
-					<span class="bg-gray mr-2 inline-block rounded px-2 py-1">
+					<span class="bg-gray tags mr-2 inline-block rounded px-2 py-1">
 						{tag}
 						<button
 							class="text-gray ml-1"
@@ -200,7 +200,11 @@
 	</div>
 
 	<div class="flex flex-col items-center font-bold text-red-400">{message}</div>
-	<button type="submit" class="w-full rounded bg-blue-500 p-2 text-white hover:bg-blue-600"
+	<button type="submit" class="add w-full rounded p-2 text-white hover:bg-blue-600"
 		>Add Swing</button
 	>
 </form>
+
+<style>
+	@import '../styles.css';
+</style>

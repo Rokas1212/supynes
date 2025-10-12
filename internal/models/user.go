@@ -7,7 +7,12 @@ type User struct {
 	Email       string `gorm:"uniqueIndex;not null"`
 	Password    string `gorm:"not null"`
 	DisplayName string `gorm:"not null"`
-	IsAdmin     bool   `gorm:"not null;default:false"`
-	IsModerator bool   `gorm:"not null;default:false"`
+	Role        int    `gorm:"not null;default:1"`
 	CreatedAt   time.Time
 }
+
+const (
+	RoleUser      = 1
+	RoleModerator = 2
+	RoleAdmin     = 3
+)

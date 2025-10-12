@@ -6,6 +6,7 @@ type Swing struct {
 	ID           uint   `gorm:"primaryKey"`
 	UserID       uint   `gorm:"not null;"`
 	Name         string `gorm:"not null"`
+	Description  string
 	SeatCount    *int
 	MaxWeightKg  *int
 	IsAccessible bool `gorm:"not null;default:false"`
