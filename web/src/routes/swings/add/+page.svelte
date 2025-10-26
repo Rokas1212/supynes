@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
+	import { getUserIdFromToken } from '$lib/utils/jwt';
+	import { onMount } from 'svelte';
 	let name = '';
 	let address = '';
 	let lat = '';
@@ -8,46 +11,64 @@
 	let maxWeightKg: number;
 	let isAccessible: boolean;
 	let tags: string[] = [];
+	let photos: File[] = [];
+	let materials: number[] = [];
 	let tagInput = '';
-	let message = 'fafa';
+	let message = '';
 	let err = '';
+	let materialsOpen = false;
+
+	let materialsList: { ID: number; Name: string }[] = [];
+
+	onMount(async () => {
+		try {
+			const response = await fetch('/api/materials');
+			materialsList = await response.json();
+		} catch (error) {
+			console.error('Failed to load materials:', error);
+		}
+	});
+
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
 		err = '';
 
 		try {
-			let userID = localStorage.getItem('userID');
-
-			if (!userID) {
+			let token = localStorage.getItem('token');
+			if (!token) {
 				alert('login first');
 				return;
 			}
+			let userID = getUserIdFromToken(token);
+			if (!userID) {
+				alert('invalid token, login again');
+				return;
+			}
+
+			const formData = new FormData();
+			formData.append('UserID', userID.toString());
+			formData.append('Name', name);
+			formData.append('Address', address);
+			formData.append('Lat', lat);
+			formData.append('Lng', lng);
+			formData.append('City', city);
+			if (seatCount) formData.append('SeatCount', seatCount.toString());
+			if (maxWeightKg) formData.append('MaxWeightKg', maxWeightKg.toString());
+			formData.append('IsAccessible', isAccessible ? 'true' : 'false');
+			tags.forEach((tag) => formData.append('Tags[]', tag));
+			materials.forEach((id) => formData.append('MaterialIDs[]', id.toString()));
+			photos.forEach((photo) => formData.append('photos[]', photo));
 
 			const resp = await fetch('/api/swing', {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					UserID: parseInt(userID),
-					Name: name,
-					Address: address,
-					Lat: parseFloat(lat),
-					Lng: parseFloat(lng),
-					City: city,
-					SeatCount: seatCount ? seatCount : null,
-					IsAccessible: isAccessible ? isAccessible : false,
-					MaxWeightKg: maxWeightKg ? maxWeightKg : null,
-					Tags: tags
-				})
+				body: formData
 			});
 
 			if (resp.ok) {
 				const data = await resp.json();
-				console.log(data);
+				console.log('Swing created successfully', data);
 				message = 'Swing Created Successfully, Redirecting...';
-				setTimeout(() => {}, 1000);
-				window.location.href = '/swings';
+				setTimeout(() => goto('/swings'), 2000);
 			} else {
 				const data = await resp.json();
 				err = data.error || 'failed';
@@ -61,7 +82,6 @@
 
 <!-- TODO: add picture upload -->
 <!-- TODO: add redirect to swings or the specific swing-->
-<!-- TODO: style form -->
 <form on:submit={handleSubmit} class="mx-auto max-w-lg space-y-4 rounded">
 	<div class="flex flex-col">
 		<label for="name" class="mb-1 text-sm font-medium">Name</label>
@@ -160,6 +180,22 @@
 		<label for="isAccessible" class="text-sm font-medium">Accessible for disabled</label>
 	</div>
 
+	<div>
+		<label for="photos" class="mb-1 text-sm font-medium">Photos</label>
+		<input
+			id="photos"
+			name="photos"
+			type="file"
+			accept="image/*"
+			multiple
+			on:change={(e) => {
+				const files: File[] = Array.from((e.target as HTMLInputElement).files || []);
+				photos = files;
+			}}
+			class="rounded border p-2"
+		/>
+	</div>
+
 	<div class="flex flex-col">
 		<label for="tags" class="mb-1 text-sm font-medium">Tags</label>
 		<input
@@ -171,6 +207,10 @@
 				if (e.key === 'Enter') {
 					e.preventDefault();
 					if (tagInput.trim()) {
+						if (tags.includes(tagInput.trim())) {
+							alert('Tag already added');
+							return;
+						}
 						tags = [...tags, tagInput.trim()];
 						tagInput = '';
 					}
@@ -199,12 +239,47 @@
 		{/if}
 	</div>
 
+	<div class="flex flex-col">
+		<label for="materials" class="mb-1 text-sm font-medium">Materials</label>
+		<div class="relative">
+			<button
+				type="button"
+				class="w-full rounded border p-2 text-left"
+				on:click={() => (materialsOpen = !materialsOpen)}
+			>
+				{materials.length
+					? materialsList
+							.filter((m) => materials.includes(m.ID))
+							.map((m) => m.Name)
+							.join(', ')
+					: 'Select materials'}
+			</button>
+			{#if materialsOpen}
+				<div class="absolute z-10 mt-1 w-full rounded border bg-white shadow-lg">
+					{#each materialsList as material}
+						<label class="block p-2 hover:bg-gray-100">
+							<input
+								type="checkbox"
+								value={material.ID}
+								checked={materials.includes(material.ID)}
+								on:change={() => {
+									if (materials.includes(material.ID)) {
+										materials = materials.filter((id) => id !== material.ID);
+									} else {
+										materials = [...materials, material.ID];
+									}
+								}}
+							/>
+							<span class="ml-2">{material.Name}</span>
+						</label>
+					{/each}
+				</div>
+			{/if}
+		</div>
+	</div>
+
 	<div class="flex flex-col items-center font-bold text-red-400">{message}</div>
-	<button type="submit" class="add w-full rounded p-2 text-white hover:bg-blue-600"
+	<button type="submit" class="add w-full rounded bg-blue-500 p-2 text-white hover:bg-blue-600"
 		>Add Swing</button
 	>
 </form>
-
-<style>
-	@import '../styles.css';
-</style>

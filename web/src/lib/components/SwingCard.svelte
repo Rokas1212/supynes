@@ -13,7 +13,7 @@
 </script>
 
 <div
-	class="group cursor-pointer overflow-hidden rounded-2xl border duration-300 hover:-translate-y-5"
+	class="group cursor-pointer overflow-hidden rounded-2xl border bg-gray-300 duration-300 hover:-translate-y-5"
 >
 	<div class="aspect-[4/3] overflow-hidden">
 		<img

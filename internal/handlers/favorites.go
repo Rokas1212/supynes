@@ -11,7 +11,6 @@ import (
 )
 
 type AddFavoriteRequest struct {
-	UserID  uint `json:"userID"`
 	SwingID uint `json:"swingID"`
 }
 
@@ -23,22 +22,33 @@ type GetFavoritesResponse struct {
 	Swings []uint `json:"swings"`
 }
 
-// TODO: ADD JWT TO VERIFY USERID
-
 func AddFavorite(c *gin.Context, db *gorm.DB) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	uid, ok := userID.(uint)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid userID type"})
+		return
+	}
+
 	var req AddFavoriteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
 	}
 
 	favorite := models.Favorite{
-		UserID:    req.UserID,
+		UserID:    uid,
 		SwingID:   req.SwingID,
 		CreatedAt: time.Now(),
 	}
 
 	var existingFavorite models.Favorite
-	result := db.Where("user_id = ? AND swing_id = ?", req.UserID, req.SwingID).First(&existingFavorite)
+	result := db.Where("user_id = ? AND swing_id = ?", uid, req.SwingID).First(&existingFavorite)
 	if result.Error == nil {
 		db.Delete(&existingFavorite)
 		c.JSON(http.StatusOK, gin.H{"msg": "Favorite removed"})

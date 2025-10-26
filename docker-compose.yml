@@ -6,6 +6,7 @@ services:
     volumes:
       - ./nginx/:/usr/share/nginx/html
       - ./nginx/conf.d/:/etc/nginx/conf.d/
+      - media_storage:/usr/share/nginx/html/media
     depends_on:
       - web
       - app
@@ -33,6 +34,8 @@ services:
       JWT_SECRET: ${JWT_SECRET:-supsersruipr421421!surusp_rjsdrjds}
     depends_on:
       - db
+    volumes:
+    - media_storage:/app/media
 
   web:
     image: node:20-alpine
@@ -44,3 +47,4 @@ services:
 
 volumes:
   pgdata:
+  media_storage:

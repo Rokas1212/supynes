@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
+
 	let email = '';
 	let password = '';
 	let displayName = '';
@@ -21,7 +23,7 @@
 				const data = await resp.json();
 				console.log('Registration successful', data);
 
-				window.location.href = '/';
+				goto('/');
 			} else {
 				const data = await resp.json();
 				err = data.error || 'registration failed';

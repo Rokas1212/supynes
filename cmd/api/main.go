@@ -53,16 +53,28 @@ func main() {
 	router.POST("/register", func(c *gin.Context) {
 		handlers.Register(c, database.DB)
 	})
-	router.POST("/favorite", func(c *gin.Context) {
-		handlers.AddFavorite(c, database.DB)
-	})
 	router.GET("/favorites", func(c *gin.Context) {
 		handlers.GetFavorites(c, database.DB)
+	})
+	router.GET("/materials", func(c *gin.Context) {
+		handlers.GetAllMaterials(c, database.DB)
+	})
+	router.GET("/swings/:id", func(c *gin.Context) {
+		handlers.GetSwingByID(c, database.DB)
+	})
+	router.GET("/photos/:id", func(c *gin.Context) {
+		handlers.GetPhotosBySwingID(c, database.DB)
 	})
 
 	protected := router.Group("/auth")
 	protected.Use(middleware.AuthMiddleware())
 	{
+		protected.POST("/favorite", func(c *gin.Context) {
+			handlers.AddFavorite(c, database.DB)
+		})
+		protected.GET("/profile", func(c *gin.Context) {
+			handlers.GetProfile(c, database.DB)
+		})
 		protected.DELETE("/users/delete", func(c *gin.Context) {
 			handlers.DeleteUser(c, database.DB)
 		})

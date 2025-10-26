@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { getUserIdFromToken } from '$lib/utils/jwt';
+	import { goto } from '$app/navigation';
 
 	// Navbar props
 	export let title: string = 'Supynes';
 	export let navLinks: Array<{ href: string; label: string }> = [
 		{ href: '/swings', label: 'Swings' },
-		{ href: '/about', label: 'About' }
+		{ href: '/about', label: 'About' },
+		{ href: '/users/profile', label: 'My Profile' },
+		{ href: '/swings/add', label: 'Add Swing' }
 	];
 	export let showLogin: boolean = true;
 
@@ -27,46 +29,9 @@
 		}
 	});
 
-	async function handleUserDelete() {
-		const token = localStorage.getItem('token');
-		if (!token) {
-			alert('You must be logged in to delete your user.');
-			return;
-		}
-		if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-			return;
-		}
-		try {
-			const userID = getUserIdFromToken(token);
-			if (!userID) {
-				alert('Invalid token. Please log in again.');
-				return;
-			}
-			const resp = await fetch('/api/auth/users/delete', {
-				method: 'DELETE',
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: `Bearer ${token}`
-				}
-			});
-			if (resp.ok) {
-				localStorage.removeItem('token');
-				alert('Your account has been deleted.');
-				window.location.href = '/';
-			} else {
-				const data = await resp.json();
-				alert(data.error || 'Failed to delete user.');
-				localStorage.removeItem('token');
-				window.location.href = '/users/login';
-			}
-		} catch (error) {
-			alert('Network error. Please try again.');
-		}
-	}
-
 	async function logout() {
 		localStorage.clear();
-		window.location.href = '/';
+		goto('/');
 	}
 </script>
 
@@ -110,13 +75,6 @@
 						class="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
 					>
 						Log out
-					</button>
-					<button
-						type="button"
-						on:click={() => handleUserDelete()}
-						class="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-					>
-						Delete My User
 					</button>
 				{/if}
 

@@ -4,7 +4,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
 	server: {
-		allowedHosts: ["karkasai.ciuplinskas.lt"]
+		allowedHosts: ['karkasai.ciuplinskas.lt']
 	},
 	plugins: [tailwindcss(), sveltekit()]
 });

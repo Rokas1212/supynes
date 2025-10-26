@@ -23,18 +23,48 @@ type RegisterRequest struct {
 	DisplayName string `json:"displayName"`
 }
 
-type ProfileRequest struct {
-	UserID uint `json:"userID"`
-}
-
 type ProfileResponse struct {
 	UserID      uint           `json:"userID"`
 	Email       string         `json:"email"`
 	DisplayName string         `json:"displayName"`
-	IsAdmin     bool           `json:"isAdmin"`
-	IsModerator bool           `json:"isModerator"`
+	Role        int            `json:"role"`
 	CreatedAt   time.Time      `json:"createdAt"`
 	Swings      []models.Swing `json:"swings,omitempty"`
+}
+
+func GetProfile(c *gin.Context, db *gorm.DB) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	uid, ok := userID.(uint)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid userID type"})
+		return
+	}
+
+	var dbUser models.User
+	result := db.First(&dbUser, "id = ?", uid)
+	if result.Error != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid input when getting user profile"})
+		return
+	}
+
+	var swings []models.Swing
+	db.Where("user_id = ?", uid).Find(&swings)
+
+	response := ProfileResponse{
+		UserID:      dbUser.ID,
+		Email:       dbUser.Email,
+		DisplayName: dbUser.DisplayName,
+		Role:        dbUser.Role,
+		CreatedAt:   dbUser.CreatedAt,
+		Swings:      swings,
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 func Register(c *gin.Context, db *gorm.DB) {

@@ -8,6 +8,20 @@
 
 <Navbar title="Supynės" />
 
-{@render children?.()}
+<div class="content-wrapper">
+	{@render children?.()}
+</div>
 
 <Footer></Footer>
+
+<style>
+	.content-wrapper {
+		background-color: rgb(197, 197, 187);
+		background-size: cover;
+		background-position: center;
+		background-repeat: no-repeat;
+		min-height: calc(100vh - 64px - 48px);
+		width: 100%;
+		padding: 20px 0;
+	}
+</style>

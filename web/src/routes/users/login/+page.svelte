@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
+
 	let email = '';
 	let password = '';
 	let err = '';
@@ -22,7 +24,7 @@
 
 				localStorage.setItem('token', data.token);
 
-				window.location.href = '/';
+				goto('/');
 			} else {
 				const data = await resp.json();
 				err = data.error || 'login failed';

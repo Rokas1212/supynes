@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { getUserIdFromToken } from '$lib/utils/jwt';
+	import { goto } from '$app/navigation';
 
 	type Swing = {
 		ID: number;
@@ -12,9 +14,11 @@
 	};
 	let swings: Swing[] = [];
 	let favorites: number[] = [];
+	let token: string | null = null;
 
 	onMount(async () => {
 		try {
+			token = localStorage.getItem('token');
 			const resp = await fetch('/api/swings', {
 				method: 'GET'
 			});
@@ -32,7 +36,10 @@
 	});
 
 	async function getFavorites() {
-		let userID = localStorage.getItem('userID');
+		if (!token) {
+			return;
+		}
+		const userID = getUserIdFromToken(token);
 
 		if (!userID) {
 			return;
@@ -57,21 +64,25 @@
 	}
 
 	async function handleFavorite(id: number) {
-		let userID = localStorage.getItem('userID');
-
-		if (!userID) {
-			window.location.href = '/users/login';
+		if (!token) {
+			goto('/users/login');
 			return;
 		}
+		const userID = getUserIdFromToken(token);
+		if (!userID) {
+			goto('/users/login');
+			return;
+		}
+		console.log(userID);
 
 		try {
-			const resp = await fetch('/api/favorite', {
+			const resp = await fetch('/api/auth/favorite', {
 				method: 'POST',
 				headers: {
-					'Content-Type': 'application/json'
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`
 				},
 				body: JSON.stringify({
-					UserID: parseInt(userID),
 					SwingID: id
 				})
 			});
@@ -85,6 +96,14 @@
 			console.error('Failed to add favorite:', error);
 		}
 	}
+
+	let hoveredRow: number | null = null;
+
+	function handleRowClick(event: MouseEvent, id: number) {
+		const target = event.target as HTMLElement;
+		if (target.closest('.favorite-cell')) return;
+		goto(`/swings/${id}`);
+	}
 </script>
 
 <section class="px-4 py-16">
@@ -94,35 +113,49 @@
 			<p class="mx-auto max-w-2xl text-lg">Super Grounds!</p>
 		</div>
 
-		<div class="relative grid grid-cols-1 gap-6 overflow-x-auto md:grid-cols-2 lg:grid-cols-3">
-			<table class="border-collapse border border-black">
-				<thead>
-					<tr class="border border-black">
-						<th scope="col" class="px-6 py-3"> ID </th>
-						<th scope="col" class="px-6 py-3"> Name </th>
-						<th scope="col" class="px-6 py-3"> Address </th>
-						<th scope="col" class="px-6 py-3"> City </th>
-						<th scope="col" class="px-6 py-3"> Coordinates </th>
-						<th scope="col" class="px-6 py-3"> Description </th>
-						<th scope="col" class="px-6 py-3"> Add to favorite </th>
-					</tr>
-				</thead>
-				<tbody>
-					{#each swings as swing}
-						<tr class="border-t border-black font-medium dark:text-black">
-							<td class="px-6 py-4">{swing.ID}</td>
-							<td class="px-6 py-4">{swing.Name}</td>
-							<td class="px-6 py-4">{swing.Address}</td>
-							<td class="px-6 py-4">{swing.City}</td>
-							<td class="px-6 py-4">{swing.Lat}, {swing.Lng}</td>
-							<td class="px-6 py-4">{swing.Description}</td>
-							<td on:click={() => handleFavorite(swing.ID)} class="px-6 py-4 text-center">
-								{#if favorites.includes(swing.ID)}★{:else}☆{/if}
-							</td>
+		<div class="flex justify-center">
+			<div class="overflow-x-auto">
+				<table class="border-collapse border border-black">
+					<thead>
+						<tr class="border border-black">
+							<th scope="col" class="px-6 py-3"> ID </th>
+							<th scope="col" class="px-6 py-3"> Name </th>
+							<th scope="col" class="px-6 py-3"> Address </th>
+							<th scope="col" class="px-6 py-3"> City </th>
+							<th scope="col" class="px-6 py-3"> Coordinates </th>
+							<th scope="col" class="px-6 py-3"> Description </th>
+							<th scope="col" class="px-6 py-3"> Add to favorite </th>
 						</tr>
-					{/each}
-				</tbody>
-			</table>
+					</thead>
+					<tbody>
+						{#each swings as swing}
+							<tr
+								class="border-t border-black font-medium dark:text-black {hoveredRow === swing.ID
+									? 'bg-gray-200'
+									: ''}"
+								on:mouseenter={() => (hoveredRow = swing.ID)}
+								on:mouseleave={() => (hoveredRow = null)}
+								on:click={(event) => handleRowClick(event, swing.ID)}
+								style="cursor: pointer;"
+							>
+								<td class="px-6 py-4">{swing.ID}</td>
+								<td class="px-6 py-4">{swing.Name}</td>
+								<td class="px-6 py-4">{swing.Address}</td>
+								<td class="px-6 py-4">{swing.City}</td>
+								<td class="px-6 py-4">{swing.Lat}, {swing.Lng}</td>
+								<td class="px-6 py-4">{swing.Description}</td>
+								<td
+									class="favorite-cell px-6 py-4 text-center"
+									on:click|stopPropagation={() => handleFavorite(swing.ID)}
+									style="cursor: pointer;"
+								>
+									{#if favorites.includes(swing.ID)}★{:else}☆{/if}
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
 		</div>
 	</div>
 </section>

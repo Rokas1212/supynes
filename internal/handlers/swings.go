@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"fmt"
+	"mime/multipart"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/Rokas1212/supynes/internal/models"
@@ -22,25 +24,39 @@ type SwingAddRequest struct {
 	City         string
 	CreatedAt    time.Time
 	Tags         []string
+	MaterialIDs  []uint
+	Photos       []*multipart.FileHeader `form:"photos[]"`
 }
 
 func AddSwing(c *gin.Context, db *gorm.DB) {
-	var req SwingAddRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Invalid input: %s", err)})
+	// Parse multipart form
+	if err := c.Request.ParseMultipartForm(32 << 20); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid multipart form"})
 		return
 	}
 
+	// Get form values
+	userID, _ := strconv.ParseUint(c.PostForm("UserID"), 10, 64)
+	name := c.PostForm("Name")
+	address := c.PostForm("Address")
+	lat, _ := strconv.ParseFloat(c.PostForm("Lat"), 64)
+	lng, _ := strconv.ParseFloat(c.PostForm("Lng"), 64)
+	city := c.PostForm("City")
+	seatCount, _ := strconv.Atoi(c.PostForm("SeatCount"))
+	maxWeightKg, _ := strconv.Atoi(c.PostForm("MaxWeightKg"))
+	isAccessible := c.PostForm("IsAccessible") == "true"
+
+	// Create swing
 	swing := models.Swing{
-		UserID:       req.UserID,
-		Name:         req.Name,
-		Address:      req.Address,
-		Lat:          req.Lat,
-		Lng:          req.Lng,
-		City:         req.City,
-		SeatCount:    req.SeatCount,
-		MaxWeightKg:  req.MaxWeightKg,
-		IsAccessible: req.IsAccessible,
+		UserID:       uint(userID),
+		Name:         name,
+		Address:      address,
+		Lat:          &lat,
+		Lng:          &lng,
+		City:         city,
+		SeatCount:    &seatCount,
+		MaxWeightKg:  &maxWeightKg,
+		IsAccessible: isAccessible,
 		CreatedAt:    time.Now(),
 	}
 
@@ -50,52 +66,87 @@ func AddSwing(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	if len(req.Tags) > 0 {
-		var failedTags []string
-
-		for _, tag := range req.Tags {
-
-			tagErr := addTag(tag, db)
-			if tagErr != nil {
-				failedTags = append(failedTags, tag)
-				continue
+	// Handle photo uploads
+	form, err := c.MultipartForm()
+	if err == nil && form.File != nil {
+		files := form.File["photos[]"]
+		for _, fileHeader := range files {
+			uploadedPath, err := uploadPhoto(fileHeader)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to upload photo: %s", err)})
+				return
 			}
-
-			tagID, err := findTag(tag, db)
-			if err != nil || tagID == nil {
-				failedTags = append(failedTags, tag)
-				continue
-			}
-
-			swingTag := models.SwingTag{
-				SwingID:   swing.ID,
-				TagID:     *tagID,
+			swingPhoto := models.Photo{
+				URL:       uploadedPath,
 				CreatedAt: time.Now(),
+				UserID:    uint(userID),
+				SwingID:   &swing.ID,
+				Caption:   "Photo for swing " + name,
 			}
-
-			if err := db.Create(&swingTag).Error; err != nil {
-				failedTags = append(failedTags, tag)
-			}
+			db.Create(&swingPhoto)
 		}
-
-		// Return success with optional warning about failed tags
-		response := gin.H{
-			"message": "Swing created successfully",
-			"id":      swing.ID,
-		}
-
-		if len(failedTags) > 0 {
-			response["warning"] = fmt.Sprintf("Some tags couldn't be associated: %v", failedTags)
-		}
-
-		c.JSON(http.StatusCreated, response)
-		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
+	// Handle tags
+	tags := c.PostFormArray("Tags[]")
+	var failedTags []string
+	for _, tag := range tags {
+		tagErr := addTag(tag, db)
+		if tagErr != nil {
+			failedTags = append(failedTags, tag)
+			continue
+		}
+		tagID, err := findTag(tag, db)
+		if err != nil || tagID == nil {
+			failedTags = append(failedTags, tag)
+			continue
+		}
+		swingTag := models.SwingTag{
+			SwingID:   swing.ID,
+			TagID:     *tagID,
+			CreatedAt: time.Now(),
+		}
+		if err := db.Create(&swingTag).Error; err != nil {
+			failedTags = append(failedTags, tag)
+		}
+	}
+
+	// Handle materials
+	materialIDs := c.PostFormArray("MaterialIDs[]")
+	var failedMaterialIDs []uint
+	for _, midStr := range materialIDs {
+		mid, err := strconv.ParseUint(midStr, 10, 64)
+		if err != nil {
+			continue
+		}
+		var material models.Material
+		if err := db.First(&material, mid).Error; err != nil {
+			failedMaterialIDs = append(failedMaterialIDs, uint(mid))
+			continue
+		}
+		swingMaterial := models.SwingMaterial{
+			SwingID:    swing.ID,
+			MaterialID: uint(mid),
+			CreatedAt:  time.Now(),
+		}
+		if err := db.Create(&swingMaterial).Error; err != nil {
+			failedMaterialIDs = append(failedMaterialIDs, uint(mid))
+		}
+	}
+
+	// Build response
+	response := gin.H{
 		"message": "Swing created successfully",
 		"id":      swing.ID,
-	})
+	}
+	if len(failedTags) > 0 {
+		response["warning_tags"] = fmt.Sprintf("Some tags couldn't be associated: %v", failedTags)
+	}
+	if len(failedMaterialIDs) > 0 {
+		response["warning_materials"] = fmt.Sprintf("Some materials couldn't be associated: %v", failedMaterialIDs)
+	}
+
+	c.JSON(http.StatusCreated, response)
 }
 
 func GetAllSwings(c *gin.Context, db *gorm.DB) {
@@ -106,4 +157,17 @@ func GetAllSwings(c *gin.Context, db *gorm.DB) {
 		return
 	}
 	c.JSON(http.StatusOK, swings)
+}
+
+func GetSwingByID(c *gin.Context, db *gorm.DB) {
+	swingID := c.Param("id")
+	var swing models.Swing
+	result := db.Preload("Tags").Preload("Materials").Preload("User", func(db *gorm.DB) *gorm.DB {
+		return db.Select("id, display_name")
+	}).First(&swing, swingID)
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Swing not found"})
+		return
+	}
+	c.JSON(http.StatusOK, swing)
 }
