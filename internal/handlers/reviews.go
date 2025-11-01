@@ -65,6 +65,18 @@ func RemoveReview(c *gin.Context, db *gorm.DB) {
 	c.JSON(http.StatusOK, gin.H{"message": "Review deleted successfully"})
 }
 
+func GetSwingAverageRating(c *gin.Context, db *gorm.DB) {
+	swingID := c.Param("id")
+
+	var averageRating float64
+	if err := db.Model(&models.Review{}).Where("swing_id = ?", swingID).Select("AVG(rating)").Scan(&averageRating).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to calculate average rating"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"averageRating": averageRating})
+}
+
 func AddReview(c *gin.Context, db *gorm.DB) {
 	userID, exists := c.Get("userID")
 	if !exists {

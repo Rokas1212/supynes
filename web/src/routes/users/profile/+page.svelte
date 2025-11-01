@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { getUserIdFromToken } from '$lib/utils/jwt';
 	import { goto } from '$app/navigation';
+	import { getFavorites } from '$lib/utils/favorites';
 
 	export let title = 'User Profile - Supynės';
 
@@ -24,8 +25,9 @@
 
 	let profile: UserProfile | null = null;
 	let swings: Swing[] = [];
-
+	let favorites: number[];
 	onMount(async () => {
+		favorites = await getFavorites(getUserIdFromToken(localStorage.getItem('token') || ''));
 		document.title = title;
 
 		const resp = await fetch('/api/auth/profile', {
@@ -185,6 +187,27 @@
 			</ul>
 		{:else}
 			<p class="italic text-gray-600">No swings found.</p>
+		{/if}
+	</div>
+	<div class="mb-8 mt-8">
+		<h3 class="mb-4 text-2xl font-bold text-gray-800">Your Favorites</h3>
+		{#if favorites != null && favorites.length > 0}
+			<ul class="space-y-4">
+				{#each favorites as swingID}
+					<li>
+						<a
+							href={`/swings/${swingID}`}
+							class="block rounded-lg bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+						>
+							<div class="mb-2 flex items-center justify-between">
+								<h4 class="text-lg font-semibold text-gray-800">{swingID}</h4>
+							</div>
+						</a>
+					</li>
+				{/each}
+			</ul>
+		{:else}
+			<p class="italic text-gray-600">No favorites found.</p>
 		{/if}
 	</div>
 </div>

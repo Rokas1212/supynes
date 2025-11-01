@@ -1,13 +1,10 @@
 package handlers
 
 import (
+	"fmt"
+
 	"github.com/Rokas1212/supynes/internal/models"
 	"gorm.io/gorm"
-)
-
-const (
-	RoleUser  = 1
-	RoleAdmin = 2
 )
 
 func IsAdmin(userID uint, db *gorm.DB) (bool, error) {
@@ -15,5 +12,7 @@ func IsAdmin(userID uint, db *gorm.DB) (bool, error) {
 	if err := db.First(&user, userID).Error; err != nil {
 		return false, err
 	}
-	return user.Role == RoleAdmin, nil
+	fmt.Println("User role:", user.Role)
+	fmt.Println("Is admin:", user.Role == models.RoleAdmin)
+	return user.Role == models.RoleAdmin, nil
 }

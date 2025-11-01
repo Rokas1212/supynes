@@ -194,7 +194,7 @@ func DeleteSwing(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	if swing.UserID != userId && user.Role != 2 {
+	if swing.UserID != userId && user.Role != models.RoleAdmin {
 		c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to delete this swing"})
 		return
 	}

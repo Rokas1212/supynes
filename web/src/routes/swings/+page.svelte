@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { getUserIdFromToken } from '$lib/utils/jwt';
 	import { goto } from '$app/navigation';
+	import { getFavorites } from '$lib/utils/favorites';
 
 	type Swing = {
 		ID: number;
@@ -28,38 +29,29 @@
 				swings = data;
 				console.log('Swings', data);
 			}
+
+			favorites = await getFavorites(getUserIdFromToken(token || ''));
 		} catch (error) {
 			console.error('Failed to fetch:', error);
 		}
-
-		getFavorites();
 	});
 
-	async function getFavorites() {
-		if (!token) {
-			return;
-		}
-		const userID = getUserIdFromToken(token);
-
-		if (!userID) {
-			return;
-		}
-
+	async function getAverageRating(swingID: number): Promise<number | null> {
 		try {
-			const resp = await fetch(`/api/favorites?userID=${userID}`, {
-				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json'
-				}
+			const resp = await fetch(`/api/average-ratings/${swingID}`, {
+				method: 'GET'
 			});
 
 			if (resp.ok) {
 				const data = await resp.json();
-
-				favorites = data.swings;
+				return data.averageRating;
+			} else {
+				console.error('Failed to fetch average rating');
+				return null;
 			}
 		} catch (error) {
-			console.error('Failed to fetch favorites:', error);
+			console.error('Error fetching average rating:', error);
+			return null;
 		}
 	}
 
@@ -88,7 +80,7 @@
 			});
 
 			if (resp.ok) {
-				getFavorites();
+				favorites = await getFavorites(userID);
 			} else {
 				alert('ups');
 			}
@@ -120,33 +112,44 @@
 							<th
 								scope="col"
 								class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-								>Name</th
 							>
+								Name
+							</th>
 							<th
 								scope="col"
 								class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-								>Address</th
 							>
+								Address
+							</th>
 							<th
 								scope="col"
 								class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-								>City</th
 							>
+								City
+							</th>
 							<th
 								scope="col"
 								class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-								>Coordinates</th
 							>
+								Coordinates
+							</th>
 							<th
 								scope="col"
 								class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-								>Description</th
 							>
+								Description
+							</th>
+							<th
+								scope="col"
+								class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+								>Average Rating
+							</th>
 							<th
 								scope="col"
 								class="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider text-gray-500"
-								>Favorite</th
 							>
+								Favorite
+							</th>
 						</tr>
 					</thead>
 					<tbody class="divide-y divide-gray-200 bg-white">
@@ -169,6 +172,15 @@
 									>Lat: {swing.Lat}°, Lng: {swing.Lng}°</td
 								>
 								<td class="px-6 py-4 text-sm text-gray-500">{swing.Description}</td>
+								<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+									{#await getAverageRating(swing.ID) then averageRating}
+										{#if averageRating !== null}
+											{averageRating.toFixed(2)}
+										{:else}
+											N/A
+										{/if}
+									{/await}
+								</td>
 								<td
 									class="favorite-cell whitespace-nowrap px-6 py-4 text-center text-xl"
 									on:click|stopPropagation={() => handleFavorite(swing.ID)}

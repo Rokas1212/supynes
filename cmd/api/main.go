@@ -68,6 +68,9 @@ func main() {
 	router.GET("/reviews/:id", func(c *gin.Context) {
 		handlers.GetSwingReviews(c, database.DB)
 	})
+	router.GET("/average-ratings/:id", func(c *gin.Context) {
+		handlers.GetSwingAverageRating(c, database.DB)
+	})
 
 	protected := router.Group("/auth")
 	protected.Use(middleware.AuthMiddleware())

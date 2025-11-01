@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Swing } from '$lib/types/swing';
 	import type { Review } from '$lib/types/review';
-	import { getUserIdFromToken } from '$lib/utils/jwt';
+	import { getUserIdFromToken, getUserRoleFromToken } from '$lib/utils/jwt';
 	import { Trash2 } from 'lucide-svelte';
 
 	export let data: { swing: Swing; photos: string[]; reviews: Review[] };
@@ -14,8 +14,7 @@
 	images = data.photos;
 	reviews = data.reviews || [];
 	let showForm = false;
-	console.log('Reviews in component:', data.reviews);
-	console.log('data: ', data);
+	const token = localStorage.getItem('token');
 
 	let newReview = {
 		Title: '',
@@ -269,7 +268,7 @@
 						</h4>
 						<div class="text-sm text-gray-500">
 							User: {review.UserID}
-							{#if review.UserID === getUserIdFromToken(localStorage.getItem('token') || '')}
+							{#if review.UserID === getUserIdFromToken(token || '') || getUserRoleFromToken(token || '') === 'admin'}
 								<button
 									class="cursor-pointer text-red-500 hover:underline"
 									on:click={() => handleDeleteReview(review.ID)}><Trash2 class="h-5 w-5" /></button
