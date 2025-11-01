@@ -25,6 +25,8 @@ func main() {
 		port = "8085"
 	}
 
+	handlers.AddDefaultMaterials(database.DB)
+
 	// Create Gin router
 	router := gin.Default()
 
@@ -92,6 +94,9 @@ func main() {
 		})
 		protected.DELETE("/reviews/:id", func(c *gin.Context) {
 			handlers.RemoveReview(c, database.DB)
+		})
+		protected.PUT("/swings/:id", func(c *gin.Context) {
+			handlers.UpdateSwing(c, database.DB)
 		})
 	}
 

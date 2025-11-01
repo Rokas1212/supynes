@@ -80,8 +80,6 @@
 	}
 </script>
 
-<!-- TODO: add picture upload -->
-<!-- TODO: add redirect to swings or the specific swing-->
 <form on:submit={handleSubmit} class="mx-auto max-w-lg space-y-4 rounded">
 	<div class="flex flex-col">
 		<label for="name" class="mb-1 text-sm font-medium">Name</label>
@@ -255,7 +253,9 @@
 					: 'Select materials'}
 			</button>
 			{#if materialsOpen}
-				<div class="absolute z-10 mt-1 w-full rounded border bg-white shadow-lg">
+				<div
+					class="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded border bg-white shadow-lg"
+				>
 					{#each materialsList as material}
 						<label class="block p-2 hover:bg-gray-100">
 							<input

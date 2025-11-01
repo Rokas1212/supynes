@@ -206,3 +206,127 @@ func DeleteSwing(c *gin.Context, db *gorm.DB) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Swing deleted successfully"})
 }
+
+func UpdateSwing(c *gin.Context, db *gorm.DB) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	swingID := c.Param("id")
+	var swing models.Swing
+	result := db.First(&swing, swingID)
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Swing not found"})
+		return
+	}
+
+	if swing.UserID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to update this swing"})
+		return
+	}
+
+	// Parse multipart form
+	if err := c.Request.ParseMultipartForm(32 << 20); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid multipart form"})
+		return
+	}
+
+	// Get form values
+	name := c.PostForm("Name")
+	address := c.PostForm("Address")
+	lat, _ := strconv.ParseFloat(c.PostForm("Lat"), 64)
+	lng, _ := strconv.ParseFloat(c.PostForm("Lng"), 64)
+	city := c.PostForm("City")
+	seatCount, _ := strconv.Atoi(c.PostForm("SeatCount"))
+	maxWeightKg, _ := strconv.Atoi(c.PostForm("MaxWeightKg"))
+	isAccessible := c.PostForm("IsAccessible") == "true"
+
+	// Update swing fields
+	swing.Name = name
+	swing.Address = address
+	swing.Lat = &lat
+	swing.Lng = &lng
+	swing.City = city
+	swing.SeatCount = &seatCount
+	swing.MaxWeightKg = &maxWeightKg
+	swing.IsAccessible = isAccessible
+
+	result = db.Save(&swing)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update swing"})
+		return
+	}
+
+	// Handle tags - get from PostFormArray
+	tags := c.PostFormArray("Tags[]")
+	if len(tags) > 0 {
+		// Clear existing tags
+		if err := db.Where("swing_id = ?", swing.ID).Delete(&models.SwingTag{}).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update tags"})
+			return
+		}
+
+		var failedTags []string
+		for _, tag := range tags {
+			tagErr := addTag(tag, db)
+			if tagErr != nil {
+				failedTags = append(failedTags, tag)
+				continue
+			}
+			tagID, err := findTag(tag, db)
+			if err != nil || tagID == nil {
+				failedTags = append(failedTags, tag)
+				continue
+			}
+			swingTag := models.SwingTag{
+				SwingID:   swing.ID,
+				TagID:     *tagID,
+				CreatedAt: time.Now(),
+			}
+			if err := db.Create(&swingTag).Error; err != nil {
+				failedTags = append(failedTags, tag)
+			}
+		}
+	}
+
+	// Handle materials - get from PostFormArray
+	materialIDs := c.PostFormArray("MaterialIDs[]")
+	if len(materialIDs) > 0 {
+		// Clear existing materials
+		if err := db.Where("swing_id = ?", swing.ID).Delete(&models.SwingMaterial{}).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update materials"})
+			return
+		}
+
+		var failedMaterialIDs []uint
+		for _, midStr := range materialIDs {
+			mid, err := strconv.ParseUint(midStr, 10, 64)
+			if err != nil {
+				continue
+			}
+			var material models.Material
+			if err := db.First(&material, mid).Error; err != nil {
+				failedMaterialIDs = append(failedMaterialIDs, uint(mid))
+				continue
+			}
+			swingMaterial := models.SwingMaterial{
+				SwingID:    swing.ID,
+				MaterialID: uint(mid),
+				CreatedAt:  time.Now(),
+			}
+			if err := db.Create(&swingMaterial).Error; err != nil {
+				failedMaterialIDs = append(failedMaterialIDs, uint(mid))
+			}
+		}
+	}
+
+	// Build response
+	response := gin.H{
+		"message": "Swing updated successfully",
+		"id":      swing.ID,
+	}
+
+	c.JSON(http.StatusOK, response)
+}

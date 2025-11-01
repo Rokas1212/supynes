@@ -1,5 +1,6 @@
 export type Swing = {
 	ID: number;
+	UserID: number;
 	Name: string;
 	Description: string;
 	IsAccessible: boolean;

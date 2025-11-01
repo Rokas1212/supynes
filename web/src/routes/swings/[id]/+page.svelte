@@ -119,10 +119,60 @@
 				console.error('Error deleting review:', error);
 			});
 	}
+
+	function handleDeleteSwing(ID: number): any {
+		if (!confirm('Are you sure you want to delete this swing?')) {
+			return;
+		}
+
+		const token = localStorage.getItem('token');
+		if (!token) {
+			alert('You must be logged in to delete a swing.');
+			return;
+		}
+
+		fetch(`/api/auth/swings/${ID}`, {
+			method: 'DELETE',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${token}`
+			}
+		})
+			.then(async (resp) => {
+				if (resp.ok) {
+					alert('Swing deleted successfully.');
+					window.location.href = '/swings';
+				} else {
+					const data = await resp.json();
+					alert(data.error || 'Failed to delete swing.');
+				}
+			})
+			.catch((error) => {
+				console.error('Error deleting swing:', error);
+			});
+	}
 </script>
 
 <div class="mx-auto max-w-7xl px-8 py-8">
-	<h1 class="mb-8 text-4xl text-gray-800">{swing.Name}</h1>
+	<div class="mb-6 flex items-center justify-between">
+		<h1 class="mb-8 text-4xl text-gray-800">{swing.Name}</h1>
+		<div class="flex items-center gap-4">
+			{#if token && getUserIdFromToken(token) === swing.UserID}
+				<a
+					href={`/swings/${swing.ID}/edit`}
+					class="cursor-pointer rounded-lg bg-gray-500 px-4 py-2 text-white hover:bg-gray-600"
+					>Edit Swing</a
+				>
+			{/if}
+			{#if token && (getUserIdFromToken(token) === swing.UserID || getUserRoleFromToken(token) === 'admin')}
+				<button
+					on:click={() => handleDeleteSwing(swing.ID)}
+					class="flex cursor-pointer items-center rounded-lg bg-red-500 px-4 py-2 text-white hover:bg-red-600"
+					><Trash2 class="mr-2" size="16" /> Delete Swing</button
+				>
+			{/if}
+		</div>
+	</div>
 
 	<!-- image -->
 	<div class="relative mb-8">

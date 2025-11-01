@@ -14,14 +14,12 @@ import (
 )
 
 func uploadPhoto(fileHeader *multipart.FileHeader) (string, error) {
-	// Open the uploaded file
 	file, err := fileHeader.Open()
 	if err != nil {
 		return "", err
 	}
 	defer file.Close()
 
-	// Create destination file
 	dstPath := fmt.Sprintf("/app/media/%d_%s", time.Now().UnixNano(), fileHeader.Filename)
 	out, err := os.Create(dstPath)
 	if err != nil {
@@ -29,7 +27,6 @@ func uploadPhoto(fileHeader *multipart.FileHeader) (string, error) {
 	}
 	defer out.Close()
 
-	// Copy the uploaded file to the destination
 	if _, err := io.Copy(out, file); err != nil {
 		return "", err
 	}
