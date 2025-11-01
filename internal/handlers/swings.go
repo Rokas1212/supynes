@@ -171,3 +171,38 @@ func GetSwingByID(c *gin.Context, db *gorm.DB) {
 	}
 	c.JSON(http.StatusOK, swing)
 }
+
+func DeleteSwing(c *gin.Context, db *gorm.DB) {
+	swingID := c.Param("id")
+	userId, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	var swing models.Swing
+	result := db.First(&swing, swingID)
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Swing not found"})
+		return
+	}
+
+	var user models.User
+	result = db.First(&user, userId)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user"})
+		return
+	}
+
+	if swing.UserID != userId && user.Role != 2 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to delete this swing"})
+		return
+	}
+
+	result = db.Delete(&models.Swing{}, swingID)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete swing"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Swing deleted successfully"})
+}

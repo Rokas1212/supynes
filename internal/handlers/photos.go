@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
+	"net/http"
 	"os"
 	"time"
 
@@ -41,9 +42,9 @@ func GetPhotosBySwingID(c *gin.Context, db *gorm.DB) {
 
 	var photos []string
 	if err := db.Model(&models.Photo{}).Where("swing_id = ?", swingID).Pluck("url", &photos).Error; err != nil {
-		c.JSON(500, gin.H{"error": "Failed to retrieve photos"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve photos"})
 		return
 	}
 
-	c.JSON(200, gin.H{"photos": photos})
+	c.JSON(http.StatusOK, gin.H{"photos": photos})
 }

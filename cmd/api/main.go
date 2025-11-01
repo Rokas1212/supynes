@@ -65,6 +65,9 @@ func main() {
 	router.GET("/photos/:id", func(c *gin.Context) {
 		handlers.GetPhotosBySwingID(c, database.DB)
 	})
+	router.GET("/reviews/:id", func(c *gin.Context) {
+		handlers.GetSwingReviews(c, database.DB)
+	})
 
 	protected := router.Group("/auth")
 	protected.Use(middleware.AuthMiddleware())
@@ -77,6 +80,15 @@ func main() {
 		})
 		protected.DELETE("/users/delete", func(c *gin.Context) {
 			handlers.DeleteUser(c, database.DB)
+		})
+		protected.POST("/reviews/add", func(c *gin.Context) {
+			handlers.AddReview(c, database.DB)
+		})
+		protected.DELETE("/swings/:id", func(c *gin.Context) {
+			handlers.DeleteSwing(c, database.DB)
+		})
+		protected.DELETE("/reviews/:id", func(c *gin.Context) {
+			handlers.RemoveReview(c, database.DB)
 		})
 	}
 

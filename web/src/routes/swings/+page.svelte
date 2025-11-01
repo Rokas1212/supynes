@@ -109,47 +109,76 @@
 <section class="px-4 py-16">
 	<div class="mx-auto max-w-7xl">
 		<div class="mb-12 text-center">
-			<h2 class="mb-4 text-3xl font-bold">Bum Swings</h2>
-			<p class="mx-auto max-w-2xl text-lg">Super Grounds!</p>
+			<h2 class="mb-4 text-4xl font-extrabold text-gray-900">Swings</h2>
 		</div>
 
 		<div class="flex justify-center">
-			<div class="overflow-x-auto">
-				<table class="border-collapse border border-black">
-					<thead>
-						<tr class="border border-black">
-							<th scope="col" class="px-6 py-3"> ID </th>
-							<th scope="col" class="px-6 py-3"> Name </th>
-							<th scope="col" class="px-6 py-3"> Address </th>
-							<th scope="col" class="px-6 py-3"> City </th>
-							<th scope="col" class="px-6 py-3"> Coordinates </th>
-							<th scope="col" class="px-6 py-3"> Description </th>
-							<th scope="col" class="px-6 py-3"> Add to favorite </th>
+			<div class="overflow-x-auto rounded-lg shadow-lg">
+				<table class="w-full min-w-full divide-y divide-gray-200">
+					<thead class="bg-gray-50">
+						<tr>
+							<th
+								scope="col"
+								class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+								>Name</th
+							>
+							<th
+								scope="col"
+								class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+								>Address</th
+							>
+							<th
+								scope="col"
+								class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+								>City</th
+							>
+							<th
+								scope="col"
+								class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+								>Coordinates</th
+							>
+							<th
+								scope="col"
+								class="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+								>Description</th
+							>
+							<th
+								scope="col"
+								class="px-6 py-4 text-center text-xs font-medium uppercase tracking-wider text-gray-500"
+								>Favorite</th
+							>
 						</tr>
 					</thead>
-					<tbody>
+					<tbody class="divide-y divide-gray-200 bg-white">
 						{#each swings as swing}
 							<tr
-								class="border-t border-black font-medium dark:text-black {hoveredRow === swing.ID
-									? 'bg-gray-200'
+								class="transition-colors hover:bg-gray-50 {hoveredRow === swing.ID
+									? 'bg-gray-50'
 									: ''}"
 								on:mouseenter={() => (hoveredRow = swing.ID)}
 								on:mouseleave={() => (hoveredRow = null)}
 								on:click={(event) => handleRowClick(event, swing.ID)}
 								style="cursor: pointer;"
 							>
-								<td class="px-6 py-4">{swing.ID}</td>
-								<td class="px-6 py-4">{swing.Name}</td>
-								<td class="px-6 py-4">{swing.Address}</td>
-								<td class="px-6 py-4">{swing.City}</td>
-								<td class="px-6 py-4">{swing.Lat}, {swing.Lng}</td>
-								<td class="px-6 py-4">{swing.Description}</td>
+								<td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900"
+									>{swing.Name}</td
+								>
+								<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{swing.Address}</td>
+								<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500">{swing.City}</td>
+								<td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500"
+									>Lat: {swing.Lat}°, Lng: {swing.Lng}°</td
+								>
+								<td class="px-6 py-4 text-sm text-gray-500">{swing.Description}</td>
 								<td
-									class="favorite-cell px-6 py-4 text-center"
+									class="favorite-cell whitespace-nowrap px-6 py-4 text-center text-xl"
 									on:click|stopPropagation={() => handleFavorite(swing.ID)}
 									style="cursor: pointer;"
 								>
-									{#if favorites.includes(swing.ID)}★{:else}☆{/if}
+									{#if favorites.includes(swing.ID)}
+										<span class="text-yellow-400">★</span>
+									{:else}
+										<span class="text-gray-400 hover:text-yellow-400">☆</span>
+									{/if}
 								</td>
 							</tr>
 						{/each}

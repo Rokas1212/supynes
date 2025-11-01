@@ -74,7 +74,6 @@ func Register(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	// Encrypt Password
 	encryptedPassword, err := hashPassword(req.Password)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to encrypt password"})

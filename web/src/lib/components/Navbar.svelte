@@ -23,11 +23,22 @@
 
 	let isOpen: boolean = false;
 
-	onMount(async () => {
-		if (localStorage.getItem('token')) {
-			showLogin = false;
-		}
-	});
+	let token: string | null;
+
+	let checkToken = () => {
+		token = localStorage.getItem('token');
+		showLogin = !token;
+	};
+
+	onMount(checkToken);
+
+	if (typeof window !== 'undefined') {
+		window.addEventListener('storage', checkToken);
+		const tokenCheckInterval = setInterval(checkToken, 100);
+		onMount(() => {
+			return () => clearInterval(tokenCheckInterval);
+		});
+	}
 
 	async function logout() {
 		localStorage.clear();
@@ -65,14 +76,14 @@
 				{#if showLogin}
 					<a
 						href="/users/login"
-						class="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+						class="inline-flex cursor-pointer items-center rounded-md border border-transparent bg-gray-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
 					>
 						Log in
 					</a>
 				{:else}
 					<button
 						on:click={() => logout()}
-						class="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+						class="inline-flex cursor-pointer items-center rounded-md border border-transparent bg-gray-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
 					>
 						Log out
 					</button>

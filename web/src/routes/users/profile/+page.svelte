@@ -49,7 +49,7 @@
 				ID: swing.ID,
 				Name: swing.Name,
 				Description: swing.Description,
-				Accessible: swing.IsAccessible,
+				IsAccessible: swing.IsAccessible,
 				City: swing.City,
 				Address: swing.Address
 			}));
@@ -95,6 +95,35 @@
 			alert('Network error. Please try again.');
 		}
 	}
+
+	async function handleSwingDelete(swingID: number) {
+		const token = localStorage.getItem('token');
+		if (!token) {
+			alert('You must be logged in to delete a swing.');
+			return;
+		}
+		if (!confirm('Are you sure you want to delete this swing? This action cannot be undone.')) {
+			return;
+		}
+		try {
+			const resp = await fetch(`/api/auth/swings/${swingID}`, {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`
+				}
+			});
+			if (resp.ok) {
+				alert('Swing deleted successfully.');
+				swings = swings.filter((swing) => swing.ID !== swingID);
+			} else {
+				const data = await resp.json();
+				alert(data.error || 'Failed to delete swing.');
+			}
+		} catch (error) {
+			alert('Network error. Please try again.');
+		}
+	}
 </script>
 
 <div class="mx-auto max-w-3xl p-6">
@@ -126,7 +155,16 @@
 							href={`/swings/${swing.ID}`}
 							class="block rounded-lg bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
 						>
-							<h4 class="text-lg font-semibold text-gray-800">{swing.Name}</h4>
+							<div class="mb-2 flex items-center justify-between">
+								<h4 class="text-lg font-semibold text-gray-800">{swing.Name}</h4>
+								<button
+									type="button"
+									class="inline-flex items-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+									on:click|preventDefault|stopPropagation={() => handleSwingDelete(swing.ID)}
+								>
+									Delete
+								</button>
+							</div>
 							<p class="text-gray-600">{swing.Description}</p>
 							<p class="mt-2 text-sm text-gray-500">
 								{#if swing.IsAccessible}
