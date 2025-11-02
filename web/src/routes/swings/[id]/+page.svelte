@@ -180,7 +180,7 @@
 			{#each images as image, i}
 				<div class="transition-opacity duration-300" class:hidden={currentImage !== i}>
 					<img
-						src={image.replace('/app/media/', '/media/')}
+						src={image}
 						alt={swing.Name}
 						class="max-h-96 w-full rounded-lg object-cover shadow-md"
 					/>

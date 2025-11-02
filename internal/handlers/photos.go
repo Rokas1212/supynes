@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"fmt"
-	"io"
+	"io/fs"
 	"mime/multipart"
 	"net/http"
-	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/Rokas1212/supynes/internal/models"
@@ -13,25 +13,15 @@ import (
 	"gorm.io/gorm"
 )
 
-func uploadPhoto(fileHeader *multipart.FileHeader) (string, error) {
-	file, err := fileHeader.Open()
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
+func uploadPhoto(c *gin.Context, fileHeader *multipart.FileHeader) (string, error) {
+	filename := fmt.Sprintf("%d_%s", time.Now().UnixNano(), fileHeader.Filename)
+	dstPath := filepath.Join("/app/media", filename)
 
-	dstPath := fmt.Sprintf("/app/media/%d_%s", time.Now().UnixNano(), fileHeader.Filename)
-	out, err := os.Create(dstPath)
-	if err != nil {
-		return "", err
-	}
-	defer out.Close()
-
-	if _, err := io.Copy(out, file); err != nil {
+	if err := c.SaveUploadedFile(fileHeader, dstPath, fs.FileMode(0o640)); err != nil {
 		return "", err
 	}
 
-	return dstPath, nil
+	return "/media/" + filename, nil
 }
 
 func GetPhotosBySwingID(c *gin.Context, db *gorm.DB) {

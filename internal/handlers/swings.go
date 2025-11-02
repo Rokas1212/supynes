@@ -71,7 +71,7 @@ func AddSwing(c *gin.Context, db *gorm.DB) {
 	if err == nil && form.File != nil {
 		files := form.File["photos[]"]
 		for _, fileHeader := range files {
-			uploadedPath, err := uploadPhoto(fileHeader)
+			uploadedPath, err := uploadPhoto(c, fileHeader)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to upload photo: %s", err)})
 				return
