@@ -23,3 +23,15 @@ export function getUserRoleFromToken(token: string): string | null {
 		return null;
 	}
 }
+
+export function getUserRoleFromRoleNumber(role: string): string | null {
+	if (role == '1') {
+		return 'User';
+	} else if (role == '2') {
+		return 'Moderator';
+	} else if (role == '3') {
+		return 'Admin';
+	} else {
+		return null;
+	}
+}

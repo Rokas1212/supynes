@@ -1,5 +1,8 @@
 <script lang="ts">
-	import { Featured } from '$lib';
-</script>
+	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 
-<Featured />
+	onMount(() => {
+		goto('/swings');
+	});
+</script>

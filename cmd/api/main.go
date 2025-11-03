@@ -3,12 +3,22 @@ package main
 import (
 	"log"
 	"os"
+	"time"
 
+	ratelimit "github.com/JGLTechnologies/gin-rate-limit"
 	"github.com/Rokas1212/supynes/internal/database"
 	"github.com/Rokas1212/supynes/internal/handlers"
 	"github.com/Rokas1212/supynes/internal/middleware"
 	"github.com/gin-gonic/gin"
 )
+
+func keyFunc(c *gin.Context) string {
+	return c.ClientIP()
+}
+
+func errorHandler(c *gin.Context, info ratelimit.Info) {
+	c.String(429, "Too many requests. Try again in "+time.Until(info.ResetTime).String())
+}
 
 func main() {
 	if err := database.Connect(); err != nil {
@@ -26,6 +36,15 @@ func main() {
 	}
 
 	handlers.AddDefaultMaterials(database.DB)
+
+	store := ratelimit.InMemoryStore(&ratelimit.InMemoryOptions{
+		Rate:  5 * time.Second,
+		Limit: 2,
+	})
+	mw := ratelimit.RateLimiter(store, &ratelimit.Options{
+		ErrorHandler: errorHandler,
+		KeyFunc:      keyFunc,
+	})
 
 	// Create Gin router
 	router := gin.Default()
@@ -73,6 +92,9 @@ func main() {
 	router.GET("/average-ratings/:id", func(c *gin.Context) {
 		handlers.GetSwingAverageRating(c, database.DB)
 	})
+	router.GET("/swing-name/:id", func(c *gin.Context) {
+		handlers.GetSwingNameByID(c, database.DB)
+	})
 
 	protected := router.Group("/auth")
 	protected.Use(middleware.AuthMiddleware())
@@ -80,7 +102,7 @@ func main() {
 		protected.POST("/favorite", func(c *gin.Context) {
 			handlers.AddFavorite(c, database.DB)
 		})
-		protected.GET("/profile", func(c *gin.Context) {
+		protected.GET("/profile", mw, func(c *gin.Context) {
 			handlers.GetProfile(c, database.DB)
 		})
 		protected.DELETE("/users/delete", func(c *gin.Context) {

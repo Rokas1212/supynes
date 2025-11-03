@@ -70,12 +70,15 @@
 				message = 'Swing Created Successfully, Redirecting...';
 				setTimeout(() => goto('/swings'), 2000);
 			} else {
-				const data = await resp.json();
-				err = data.error || 'failed';
+				if (resp.status === 413) {
+					err = 'One or more uploaded photos are too large.';
+					return;
+				}
+				err = `${resp.status} - ${resp.statusText}`;
 			}
-		} catch (error) {
+		} catch (error: Error | any) {
 			console.error('failed:', error);
-			err = 'Error, plz try again!';
+			err = error.message || 'An unexpected error occurred';
 		}
 	}
 </script>
@@ -276,6 +279,12 @@
 				</div>
 			{/if}
 		</div>
+	</div>
+
+	<div>
+		{#if err}
+			<p class="flex justify-center text-red-500">{err}</p>
+		{/if}
 	</div>
 
 	<div class="flex flex-col items-center font-bold text-red-400">{message}</div>

@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { ssrModuleExportsKey } from 'vite/module-runner';
 
 	let email = '';
 	let password = '';
 	let err = '';
+	let success = '';
 
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
@@ -23,8 +25,11 @@
 				console.log('Login successful', data);
 
 				localStorage.setItem('token', data.token);
+				success = 'Login successful!';
 
-				goto('/');
+				setTimeout(() => {
+					goto('/');
+				}, 1000);
 			} else {
 				const data = await resp.json();
 				err = data.error || 'login failed';
@@ -65,6 +70,20 @@
 				/>
 			</div>
 
+			<div>
+				{#if err}
+					<p class="flex justify-center text-red-500">{err}</p>
+				{/if}
+				{#if success}
+					<p class="flex justify-center text-green-500">{success}</p>
+				{/if}
+			</div>
+
+			<div>
+				<a href="/users/register" class="flex justify-center text-blue-600 hover:underline"
+					>Create an account</a
+				>
+			</div>
 			<button
 				type="submit"
 				class="w-full cursor-pointer rounded-md bg-blue-600 px-4 py-2 font-semibold text-white"

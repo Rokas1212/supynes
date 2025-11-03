@@ -3,6 +3,7 @@
 	import { getUserIdFromToken } from '$lib/utils/jwt';
 	import { goto } from '$app/navigation';
 	import { getFavorites } from '$lib/utils/favorites';
+	import { getUserRoleFromRoleNumber } from '$lib/utils/jwt';
 
 	export let title = 'User Profile - Supynės';
 
@@ -26,6 +27,8 @@
 	let profile: UserProfile | null = null;
 	let swings: Swing[] = [];
 	let favorites: number[];
+	let err = '';
+
 	onMount(async () => {
 		favorites = await getFavorites(getUserIdFromToken(localStorage.getItem('token') || ''));
 		document.title = title;
@@ -56,8 +59,7 @@
 				Address: swing.Address
 			}));
 		} else {
-			const data = await resp.json();
-			console.log(data.error || 'failed');
+			err = 'Failed to load profile data, ' + `${resp.status} - ${resp.statusText}`;
 		}
 	});
 
@@ -126,9 +128,29 @@
 			alert('Network error. Please try again.');
 		}
 	}
+
+	async function getSwingNameByID(swingID: number) {
+		try {
+			const resp = await fetch(`/api/swing-name/${swingID}`, {
+				method: 'GET'
+			});
+			if (resp.ok) {
+				const data = await resp.json();
+				return data.name;
+			} else {
+				const data = await resp.json();
+				console.error(data.error || 'Failed to fetch swing name.');
+			}
+		} catch (error) {
+			console.error('Network error. Please try again.', error);
+		}
+	}
 </script>
 
 <div class="mx-auto max-w-3xl p-6">
+	{#if err}
+		<p class="mb-4 flex justify-center text-red-500">{err}</p>
+	{/if}
 	{#if profile}
 		<h2 class="mb-6 text-3xl font-bold text-gray-800">{profile.displayName}'s Profile</h2>
 		<div class="mb-8 rounded-lg bg-white p-6 shadow-md">
@@ -137,7 +159,10 @@
 				<span class="font-semibold text-gray-700">Member Since:</span>
 				{profile.createdAt}
 			</p>
-			<p class="mb-3"><span class="font-semibold text-gray-700">Role:</span> {profile.role}</p>
+			<p class="mb-3">
+				<span class="font-semibold text-gray-700">Role:</span>
+				{getUserRoleFromRoleNumber(profile.role)}
+			</p>
 			<button
 				type="button"
 				on:click={() => handleUserDelete()}
@@ -200,7 +225,13 @@
 							class="block rounded-lg bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
 						>
 							<div class="mb-2 flex items-center justify-between">
-								<h4 class="text-lg font-semibold text-gray-800">{swingID}</h4>
+								{#await getSwingNameByID(swingID)}
+									<h4 class="text-lg font-semibold text-gray-800">Loading...</h4>
+								{:then swingName}
+									<h4 class="text-lg font-semibold text-gray-800">{swingName}</h4>
+								{:catch}
+									<h4 class="text-lg font-semibold text-red-800">Error loading swing name</h4>
+								{/await}
 							</div>
 						</a>
 					</li>

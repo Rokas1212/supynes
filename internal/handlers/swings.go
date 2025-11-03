@@ -330,3 +330,20 @@ func UpdateSwing(c *gin.Context, db *gorm.DB) {
 
 	c.JSON(http.StatusOK, response)
 }
+
+func GetSwingNameByID(c *gin.Context, db *gorm.DB) {
+	swingID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid swing ID"})
+		return
+	}
+
+	var swing models.Swing
+	result := db.Select("name").First(&swing, swingID)
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Swing not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"name": swing.Name})
+}
