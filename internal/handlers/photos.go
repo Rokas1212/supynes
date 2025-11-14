@@ -6,15 +6,16 @@ import (
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
-	"time"
 
 	"github.com/Rokas1212/supynes/internal/models"
 	"github.com/gin-gonic/gin"
+	uuid "github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 func uploadPhoto(c *gin.Context, fileHeader *multipart.FileHeader) (string, error) {
-	filename := fmt.Sprintf("%d_%s", time.Now().UnixNano(), fileHeader.Filename)
+	id := uuid.New().String()
+	filename := fmt.Sprintf("%s.png", id)
 	dstPath := filepath.Join("/app/media", filename)
 
 	if err := c.SaveUploadedFile(fileHeader, dstPath, fs.FileMode(0o640)); err != nil {

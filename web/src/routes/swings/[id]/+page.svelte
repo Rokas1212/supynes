@@ -224,6 +224,22 @@
 				<li class="text-gray-600">Max Weight: {swing.MaxWeightKg}kg</li>
 				<li class="text-gray-600">Location: {swing.City}</li>
 				<li class="text-gray-600">Accessible: {swing.IsAccessible ? 'Yes' : 'No'}</li>
+				<li class="text-gray-600">
+					Tags:
+					{#if swing.Tags.length > 0}
+						{swing.Tags.map((t) => t.Name).join(', ')}
+					{:else}
+						None Specified
+					{/if}
+				</li>
+				<li class="text-gray-600">
+					Materials:
+					{#if swing.Materials.length > 0}
+						{swing.Materials.map((m) => m.Name).join(', ')}
+					{:else}
+						None
+					{/if}
+				</li>
 			</ul>
 		</div>
 

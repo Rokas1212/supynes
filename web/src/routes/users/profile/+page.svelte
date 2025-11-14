@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { getUserIdFromToken } from '$lib/utils/jwt';
+	import { getUserIdFromToken, isAdmin } from '$lib/utils/jwt';
 	import { goto } from '$app/navigation';
 	import { getFavorites } from '$lib/utils/favorites';
 	import { getUserRoleFromRoleNumber } from '$lib/utils/jwt';
@@ -24,14 +24,25 @@
 		Address: string;
 	};
 
+	type Material = {
+		ID: number;
+		Name: string;
+	};
+
+	let editing = false;
+	let newMaterialName = '';
 	let profile: UserProfile | null = null;
 	let swings: Swing[] = [];
 	let favorites: number[];
 	let err = '';
+	let materials: Material[] = [];
 
 	onMount(async () => {
-		favorites = await getFavorites(getUserIdFromToken(localStorage.getItem('token') || ''));
 		document.title = title;
+		favorites = await getFavorites(getUserIdFromToken(localStorage.getItem('token') || ''));
+		if (isAdmin(localStorage.getItem('token') || '')) {
+			await getMaterials();
+		}
 
 		const resp = await fetch('/api/auth/profile', {
 			method: 'GET',
@@ -62,6 +73,108 @@
 			err = 'Failed to load profile data, ' + `${resp.status} - ${resp.statusText}`;
 		}
 	});
+
+	async function getMaterials() {
+		try {
+			const response = await fetch('/api/materials');
+			materials = await response.json();
+		} catch (error) {
+			console.error('Failed to load materials:', error);
+		}
+	}
+
+	async function handleUpdateMaterial(materialID: number, materialName: string) {
+		const token = localStorage.getItem('token');
+		if (!token) {
+			alert('You must be logged in to update a material.');
+			return;
+		}
+		if (materialName.trim() === '') {
+			alert('Material name cannot be empty.');
+			return;
+		}
+		try {
+			const resp = await fetch(`/api/auth/materials/update/${materialID}`, {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`
+				},
+				body: JSON.stringify({ Name: materialName.trim() })
+			});
+			if (resp.ok) {
+				alert('Material updated successfully.');
+				editing = false;
+				await getMaterials();
+			} else {
+				const data = await resp.json();
+				alert(data.error || 'Failed to update material.');
+			}
+		} catch (error) {
+			alert('Network error. Please try again.');
+		}
+	}
+
+	async function handleAddMaterial() {
+		const token = localStorage.getItem('token');
+		if (!token) {
+			alert('You must be logged in to add a material.');
+			return;
+		}
+		if (newMaterialName.trim() === '') {
+			alert('Material name cannot be empty.');
+			return;
+		}
+		try {
+			const resp = await fetch('/api/auth/materials/add', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`
+				},
+				body: JSON.stringify({ Name: newMaterialName.trim() })
+			});
+			if (resp.ok) {
+				alert('Material added successfully.');
+				newMaterialName = '';
+				await getMaterials();
+			} else {
+				const data = await resp.json();
+				alert(data.error || 'Failed to add material.');
+			}
+		} catch (error) {
+			alert('Network error. Please try again.');
+		}
+	}
+
+	async function handleMaterialDelete(materialID: number) {
+		const token = localStorage.getItem('token');
+		if (!token) {
+			alert('You must be logged in to delete a material.');
+			return;
+		}
+		if (!confirm('Are you sure you want to delete this material?')) {
+			return;
+		}
+		try {
+			const resp = await fetch(`/api/auth/materials/remove/${materialID}`, {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${token}`
+				}
+			});
+			if (resp.ok) {
+				alert('Material deleted successfully.');
+				materials = materials.filter((material) => material.ID !== materialID);
+			} else {
+				const data = await resp.json();
+				alert(data.error || 'Failed to delete material.');
+			}
+		} catch (error) {
+			alert('Network error. Please try again.');
+		}
+	}
 
 	async function handleUserDelete() {
 		const token = localStorage.getItem('token');
@@ -241,4 +354,58 @@
 			<p class="italic text-gray-600">No favorites found.</p>
 		{/if}
 	</div>
+	{#if isAdmin(localStorage.getItem('token') || '')}
+		<div class="mt-8">
+			<h3 class="mb-4 text-2xl font-bold text-gray-800">Existing Materials</h3>
+			{#if materials.length > 0}
+				<ul class="pb-10">
+					{#each materials as material}
+						<li class="pb-2 text-gray-700">
+							{material.Name}
+							<button
+								class="inline-flex items-center rounded-md border border-transparent bg-red-600 px-1 py-1 text-sm font-medium text-white hover:bg-red-700"
+								on:click={() => handleMaterialDelete(material.ID)}>Delete</button
+							>
+							{#if editing}
+								<input
+									type="text"
+									bind:value={material.Name}
+									class="ml-2 rounded border px-2 py-1 text-gray-700 focus:border-blue-500 focus:outline-none"
+								/>
+								<button
+									class="inline-flex items-center rounded-md border border-transparent bg-green-600 px-1 py-1 text-sm font-medium text-white hover:bg-green-700"
+									on:click={() => handleUpdateMaterial(material.ID, material.Name)}>Save</button
+								>
+							{:else}
+								<button
+									class="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-1 py-1 text-sm font-medium text-white hover:bg-blue-700"
+									on:click={() => {
+										editing = true;
+									}}>Edit</button
+								>
+							{/if}
+						</li>
+					{/each}
+				</ul>
+			{:else}
+				<p class="italic text-gray-600">No materials found.</p>
+			{/if}
+		</div>
+
+		<div class="mt-8 pb-20">
+			<h3 class="mb-4 text-2xl font-bold text-gray-800">Add New Material</h3>
+			<input
+				type="text"
+				bind:value={newMaterialName}
+				placeholder="Material name"
+				class="rounded border px-3 py-2 text-gray-700 focus:border-blue-500 focus:outline-none"
+			/>
+			<button
+				class="inline-flex cursor-pointer items-center rounded-md border border-transparent bg-gray-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+				on:click={handleAddMaterial}
+			>
+				Add
+			</button>
+		</div>
+	{/if}
 </div>

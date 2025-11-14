@@ -35,3 +35,8 @@ export function getUserRoleFromRoleNumber(role: string): string | null {
 		return null;
 	}
 }
+
+export function isAdmin(token: string): boolean {
+	const role = getUserRoleFromToken(token);
+	return role === 'admin';
+}

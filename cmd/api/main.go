@@ -120,6 +120,15 @@ func main() {
 		protected.PUT("/swings/:id", func(c *gin.Context) {
 			handlers.UpdateSwing(c, database.DB)
 		})
+		protected.POST("/materials/add", func(c *gin.Context) {
+			handlers.AddNewMaterial(c, database.DB)
+		})
+		protected.DELETE("/materials/remove/:id", func(c *gin.Context) {
+			handlers.RemoveMaterial(c, database.DB)
+		})
+		protected.PUT("/materials/update/:id", func(c *gin.Context) {
+			handlers.UpdateMaterial(c, database.DB)
+		})
 	}
 
 	log.Printf("Server running on http://localhost:%s", port)

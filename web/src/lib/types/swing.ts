@@ -12,4 +12,15 @@ export type Swing = {
 	MaxWeightKg: number;
 	CreatedAt: string;
 	UpdatedAt: string;
+	Tags: Tag[];
+	Materials: Material[];
+};
+
+type Tag = {
+	Name: string;
+};
+
+type Material = {
+	ID: number;
+	Name: string;
 };

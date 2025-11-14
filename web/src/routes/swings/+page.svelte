@@ -13,6 +13,7 @@
 		Lat: Float64Array;
 		Lng: Float64Array;
 	};
+
 	let swings: Swing[] = [];
 	let favorites: number[] = [];
 	let token: string | null = null;
